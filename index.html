@@ -766,8 +766,34 @@
             font-size: 10px !important;
         }
 
+        /* ═══════════════════════════════ ANALYZE REPORT UI ═══════════════════════════════ */
+        .mag-raport-container {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+        .raport-section {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .raport-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .raport-section h4 { margin: 0 0 5px 0; font-size: 13px; color: var(--accent); }
+        .raport-section h5 { margin: 0 0 5px 0; font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
+        .media-list {
+            list-style: none; padding: 0; margin: 0; font-size: 11px;
+        }
+        .media-list li { margin-bottom: 3px; display: flex; justify-content: space-between; }
+        .loading-text { color: var(--warn); font-style: italic; animation: pulse 1s infinite alternate; }
+        .status-ok { color: var(--accent); font-weight: bold; }
+        .status-no { color: var(--text-muted); }
+        .status-err { color: #f44336; }
+        @keyframes pulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
+
         /* ═══════════════════════════════ WELCOME OVERLAY ═══════════════════════════════ */
-        #welcome-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -1440,122 +1466,150 @@
                 // Konwersja kliknięcia WGS84 na PUWG1992
                 const [x_2180, y_2180] = proj4("EPSG:4326", "EPSG:2180", [lng, lat]);
 
-                // Najpierw pobierz z ULDK numer i pełną geometrię (WKT) działki
+                // KROK 1: ULDK
                 const uldkUrl = `https://uldk.gugik.gov.pl/?request=GetParcelByXY&xy=${x_2180},${y_2180}&result=parcel,region,teryt,geom_wkt`;
                 const respUldk = await fetch(uldkUrl, { signal: AbortSignal.timeout(5000) });
                 const textUldk = await respUldk.text();
                 const lines = textUldk.trim().split('\n');
                 
-                let gdosAlertHTML = '';
-                
                 // Response: code\nparcel|region|teryt|POLYGON(...)
                 if (lines[0] === '0' && lines[1]) {
                     const parts = lines[1].split('|');
-                    const parcel = parts[0] || '—';
-                    const region = parts[1] || '—';
-                    const teryt = parts[2] || '—';
-                    const geomWkt = parts[3] ? parts.slice(3).join('|') : null; // everything after 3rd pipe is geometry
+                    const dataUldk = {
+                        parcel: parts[0] || '—',
+                        region: parts[1] || '—',
+                        teryt: parts[2] || '—',
+                        geomWkt: parts[3] ? parts.slice(3).join('|') : null,
+                        lat, lng
+                    };
 
-                    // Jeśli dostaliśmy geometrię działki z ULDK, odpytujemy GDOŚ WFS o kolizję przestrzenną Poligon vs Poligon
-                    if (geomWkt && geomWkt.startsWith("POLYGON")) {
-                        try {
-                            const gdosLayers = 'GDOS:ParkiNarodowe,GDOS:ParkiKrajobrazowe,GDOS:Rezerwaty,GDOS:ObszarySpecjalnejOchrony,GDOS:SpecjalneObszaryOchrony,GDOS:ObszaryChronionegoKrajobrazu,GDOS:PomnikiPrzyrody,GDOS:UzytkiEkologiczne,GDOS:StanowiskaDokumentacyjne,GDOS:ZespolyPrzyrodniczoKrajobrazowe';
-                            // Filtr geometryczny: Czy warstwy GDOŚ przecinają się z geometrią pobranej działki?
-                            const cqlFilter = `INTERSECTS(geom, ${geomWkt})`;
-                            const gdosUrl = `https://sdi.gdos.gov.pl/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${gdosLayers}&CQL_FILTER=${encodeURIComponent(cqlFilter)}&OUTPUTFORMAT=application/json&SRSNAME=EPSG:2180`;
-                            
-                            const respGdos = await fetch(gdosUrl, { signal: AbortSignal.timeout(6000) }).catch(() => null);
-                            if (respGdos && respGdos.ok) {
-                                const gdosData = await respGdos.json();
-                                if (gdosData.features && gdosData.features.length > 0) {
-                                    const zones = Array.from(new Set(gdosData.features.map(f => {
-                                        // "nazwa" to atrybut GDOŚ, fallback to nazwa warstwy (id)
-                                        return f.properties?.nazwa || f.id.split('.')[0] || 'Strefa ochronna';
-                                    })));
-                                    
-                                    gdosAlertHTML = `
-                                        <div style="margin-top: 10px; padding: 8px; background: rgba(227, 179, 65, 0.15); border: 1px solid var(--warn); border-radius: 6px;">
-                                            <div style="color: var(--warn); font-size: 11px; font-weight: bold; margin-bottom: 4px;"><i class="fa fa-leaf"></i> Analiza Ograniczeń Środowiskowych</div>
-                                            <div style="font-size: 11px; color: #d1d5db; line-height: 1.4;">
-                                                <b>⚠️ Ostrzeżenie! Cała działka koliduje ze strefami:</b><br>
-                                                <b style="color: #fff;">${zones.join('<br>• ')}</b><br><br>
-                                                Ze względu na fragmentaryczność państwowych rejestrów, sprawdź również zapisy MPZP oraz strefy konserwatorskie dla innych ograniczeń zabudowy.
-                                            </div>
-                                        </div>`;
-                                } else {
-                                    gdosAlertHTML = `
-                                        <div style="margin-top: 10px; padding: 8px; background: rgba(46, 160, 67, 0.1); border: 1px solid var(--accent); border-radius: 6px;">
-                                            <div style="color: var(--accent); font-size: 11px; font-weight: bold;"><i class="fa fa-check-circle"></i> Analiza Ograniczeń Środowiskowych</div>
-                                            <div style="font-size: 11px; color: #d1d5db; margin-top: 2px;">Brak kolizji granic działki z wielkopowierzchniowymi strefami chronionymi (Natura 2000, Parki itp.).</div>
-                                        </div>`;
-                                }
-                            }
-                        } catch (e) {
-                            console.warn("Błąd parsowania analizy WFS GDOŚ", e);
+                    let gdosResult = 'loading';
+                    let kiutResult = 'loading';
+
+                    const updateUI = () => {
+                        const html = getReportHTML(dataUldk, gdosResult, kiutResult);
+                        const panel = document.getElementById('info-panel');
+                        panel.innerHTML = `
+                            <div class="info-title">
+                                <span>Raport Analityczny</span>
+                                <i class="fa fa-times" style="cursor:pointer;color:var(--text-muted)" onclick="hideInfoPanel()"></i>
+                            </div>
+                            <div style="padding:15px">
+                                ${html}
+                            </div>`;
+                        if (!panel.classList.contains('visible')) panel.classList.add('visible');
+                        
+                        // Open sidebar on mobile when info arrives
+                        if (window.innerWidth <= 700) {
+                            document.getElementById('sidebar').classList.add('open');
                         }
-                    }
+                        
+                        if (clickMarker.getPopup()) {
+                            clickMarker.setPopupContent(html);
+                        } else {
+                            clickMarker.bindPopup(html, { maxWidth: 320, minWidth: 260 }).openPopup();
+                        }
+                    };
 
-                    showParcelInfo(parcel, region, teryt, lat, lng, gdosAlertHTML);
-                    setStatus(`Działka: ${parcel}`, 'ok');
+                    updateUI(); // renders initial "ładowanie..." statuses
+                    setStatus(`Działka: ${dataUldk.parcel}`, 'ok');
 
-                    clickMarker.bindPopup(buildPopup(parcel, region, teryt, gdosAlertHTML), { maxWidth: 280 }).openPopup();
+                    // KROK 2 & 3: Równoległe GDOŚ + KIUT
+                    const bboxSize = 2; // meters
+                    const bbox2180 = `${x_2180 - bboxSize},${y_2180 - bboxSize},${x_2180 + bboxSize},${y_2180 + bboxSize}`;
+
+                    Promise.allSettled([
+                        checkGdosConstraints(dataUldk.geomWkt),
+                        checkUtilities(bbox2180)
+                    ]).then(results => {
+                        gdosResult = results[0].status === 'fulfilled' ? results[0].value : { error: true };
+                        kiutResult = results[1].status === 'fulfilled' ? results[1].value : { error: true };
+                        updateUI(); // refreshes UI with final data
+                    });
+
                 } else {
                     setStatus('Brak działki w tym punkcie', 'ok');
-                    clickMarker.bindPopup('<div class="pop-title">Brak danych</div><p style="color:var(--text-sec);font-size:12px">W tym punkcie nie znaleziono działki ewidencyjnej.</p>').openPopup();
+                    clickMarker.bindPopup('<div class="pop-title">Brak danych</div><p style="color:var(--text-muted);font-size:12px">W tym punkcie nie znaleziono działki ewidencyjnej.</p>').openPopup();
                     hideInfoPanel();
                 }
             } catch (err) {
-                setStatus('Błąd połączenia z ULDK', 'error');
+                setStatus('Błąd połączenia z mapą (ULDK)', 'error');
                 console.error('ULDK error:', err);
             } finally {
                 hideSpinner();
             }
         });
 
-        function buildPopup(parcel, region, teryt, gdosAlertHTML = '') {
-            return `
-    <div class="pop-title"><i class="fa fa-map-pin"></i> Działka ewidencyjna</div>
-    <div class="pop-row">
-      <div class="pop-label">Numer działki</div>
-      <div class="pop-val mono">${parcel}</div>
-    </div>
-    <div class="pop-row">
-      <div class="pop-label">Obręb / Gmina</div>
-      <div class="pop-val">${region}</div>
-    </div>
-    <div class="pop-row">
-      <div class="pop-label">Identyfikator TERYT</div>
-      <div class="pop-val mono">${teryt}</div>
-    </div>
-    ${gdosAlertHTML}`;
+        // ════════════════════════════════════════════════
+        // ASYNC ORCHESTRATOR FUNCTIONS
+        // ════════════════════════════════════════════════
+        async function checkGdosConstraints(geomWkt) {
+            if (!geomWkt || !geomWkt.startsWith("POLYGON")) return { status: 'brak' };
+            const gdosLayers = 'GDOS:ParkiNarodowe,GDOS:ParkiKrajobrazowe,GDOS:Rezerwaty,GDOS:ObszarySpecjalnejOchrony,GDOS:SpecjalneObszaryOchrony,GDOS:ObszaryChronionegoKrajobrazu,GDOS:PomnikiPrzyrody,GDOS:UzytkiEkologiczne,GDOS:StanowiskaDokumentacyjne,GDOS:ZespolyPrzyrodniczoKrajobrazowe';
+            const cqlFilter = `INTERSECTS(geom, ${geomWkt})`;
+            const gdosUrl = `https://sdi.gdos.gov.pl/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${gdosLayers}&CQL_FILTER=${encodeURIComponent(cqlFilter)}&OUTPUTFORMAT=application/json&SRSNAME=EPSG:2180`;
+            const resp = await fetch(gdosUrl, { signal: AbortSignal.timeout(6000) });
+            if (!resp.ok) throw new Error("GDOŚ error");
+            const data = await resp.json();
+            if (data.features && data.features.length > 0) {
+                const zones = Array.from(new Set(data.features.map(f => f.properties?.nazwa || f.id.split('.')[0] || 'Strefa ochronna')));
+                return { status: 'kolizja', zones };
+            }
+            return { status: 'brak' };
         }
 
-        function showParcelInfo(parcel, region, teryt, lat, lng, gdosAlertHTML = '') {
-            const panel = document.getElementById('info-panel');
-            document.getElementById('info-content').innerHTML = `
-    <div class="info-row">
-      <div class="info-label">Numer działki</div>
-      <div class="info-value mono">${parcel}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">Obręb / Gmina</div>
-      <div class="info-value">${region}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">Identyfikator TERYT</div>
-      <div class="info-value mono">${teryt}</div>
-    </div>
-    <div class="info-row">
-      <div class="info-label">Współrzędne</div>
-      <div class="info-value mono">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
-    </div>
-    ${gdosAlertHTML}`;
-            panel.classList.add('visible');
+        async function checkUtilities(bbox2180) {
+            const layers = 'przewod_wodociagowy,przewod_kanalizacyjny,przewod_gazowy,przewod_elektroenergetyczny,przewod_telekomunikacyjny';
+            const url = `https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&BBOX=${bbox2180}&CRS=EPSG:2180&WIDTH=10&HEIGHT=10&LAYERS=${layers}&QUERY_LAYERS=${layers}&INFO_FORMAT=text/html&X=5&Y=5`;
+            const resp = await fetch(url, { signal: AbortSignal.timeout(4000) });
+            if (!resp.ok) throw new Error("KIUT error");
+            const text = await resp.text();
+            return {
+                woda: /wodoci[aą]gow/i.test(text),
+                kanal: /kanalizacyjn/i.test(text),
+                gaz: /gazow/i.test(text),
+                prad: /elektroenergetyczn/i.test(text),
+                tele: /telekomunikacyjn/i.test(text)
+            };
+        }
 
-            // Open sidebar on mobile when info arrives
-            if (window.innerWidth <= 700) {
-                document.getElementById('sidebar').classList.add('open');
-            }
+        function getReportHTML(dataUldk, gdosResult, kiutResult) {
+            const gdosHtml = gdosResult === 'loading' ? '<span class="loading-text">Ładowanie...</span>' :
+                             gdosResult?.status === 'kolizja' ? `<b style="color:var(--warn)">⚠️ Kolizja:</b> <span style="color:#fff">${gdosResult.zones.join(', ')}</span>` :
+                             gdosResult?.status === 'brak' ? `<span class="status-ok">✔ Brak punktów zapalnych (10 warstw GDOŚ)</span>` : 
+                             `<span class="status-err">❌ Błąd serwera GDOŚ (Timeout)</span>`;
+                             
+            const getKiutRow = (key, name, icon) => {
+                if (kiutResult === 'loading') return `<li>${icon} ${name}: <span class="loading-text">Ładowanie...</span></li>`;
+                if (!kiutResult || kiutResult.error) return `<li>${icon} ${name}: <span class="status-err">Brak odp. ze Starostwa</span></li>`;
+                return `<li>${icon} ${name}: ${kiutResult[key] ? '<span class="status-ok">✔ W BBOX (WMS)</span>' : '<span class="status-no">Może brakować na mapach</span>'}</li>`;
+            };
+
+            return `
+<div class="mag-raport-container">
+    <div class="raport-section">
+        <h4 style="margin-bottom:4px; font-size: 14px; font-weight: 600;">Działka: <span class="mono" style="color:var(--text-primary)">${dataUldk.parcel}</span></h4>
+        <div style="font-size:11px;color:var(--text-muted)">${dataUldk.region}</div>
+        <div style="font-size:11px;color:var(--text-muted)" class="mono">TERYT: ${dataUldk.teryt}</div>
+    </div>
+    <div class="raport-section">
+        <h5>🔌 Uzbrojenie Terenu (WMS KIUT)</h5>
+        <ul class="media-list">
+            ${getKiutRow('prad', 'Prąd', '⚡')}
+            ${getKiutRow('woda', 'Woda', '💧')}
+            ${getKiutRow('gaz', 'Gaz', '🔥')}
+            ${getKiutRow('kanal', 'Kanalizacja', '💩')}
+            ${getKiutRow('tele', 'Telekomunikacja', '📡')}
+        </ul>
+    </div>
+    <div class="raport-section">
+        <h5>🌿 Ograniczenia Środowiskowe (P-to-P)</h5>
+        <div class="gdos-status" style="font-size:11px">${gdosHtml}</div>
+    </div>
+    <div class="raport-disclaimer" style="font-size: 10px; color: var(--text-muted); margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; line-height: 1.3;">
+        ⚠️ <strong>Ostrzeżenie powiązane z fizyką:</strong> System bada wybrane strefy GDOŚ metodą analityki wektorowej. Wyniki nie odzwierciedlają stref konserwatorskich zabytków ani zapisów Miejscowego Planu Zagospodarowania Przestrzennego (MPZP), które blokują WZ na etapie urzędniczym. KIUT ukazuje wyłącznie przyłącza cyfrowo wektoryzowane przez lokalne PODGiK, więc szukaj śladów rewizji fizycznie w gruncie z wykrywaczem! Przepraszamy za braki w rejestrach państwowych.
+    </div>
+</div>`;
         }
 
         function hideInfoPanel() {
