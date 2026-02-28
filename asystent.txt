@@ -30,6 +30,7 @@ Praca z oficjalnymi portalem Geoportal.gov.pl na urządzeniach mobilnych jest wy
 - ** Multi-warstwowy podkład mapowy:** Możliwość swobodnego i płynnego przełączania baz formatki między OpenStreetMap, Google Maps Satelita, Esri World Imagery oraz Państwową Ortofotomapą GUGiK wysokiej rozdzielczości.
 - ** Engine Mapowy o głębokim powiększeniu (Deep Zoom):** Zmodyfikowany silnik mapowy Leaflet skalujący kafelki za pomocą "maxNativeZoom" poza standardowe limity (do zoomu 24), co pozwala oglądać sub-metrowe detale infrastruktury podziemnej bez znikania warstw.
 - ** Optymalizacja czytelności wektorów (DPI Hack):** Wymuszenie na serwerach rządowych renderingu z High-DPI (150dpi) oraz nad-próbkowanie obrazu kafelków WMS (tileSize: 512, zoomOffset: -1) celem pogrubienia mikroskopijnych, 1-pikselowych linii ewidencyjnych i infrastrukturalnych, poprawiając drastycznie czytelność pod słońcem na ekranie roboczym.
+- ** Analiza Ograniczeń Środowiskowych P-to-P (Polygon-to-Polygon):** Automatyczna detekcja kolizji klikniętej działki ewidencyjnej z wielkopowierzchniowymi strefami ochrony przyrody. Wykorzystuje wektorową geometrię działki (WKT) pobraną z ULDK i wykonuje zapytanie przestrzenne OGC WFS (CQL_FILTER=INTERSECTS) do serwerów GDOŚ w czasie rzeczywistym. Ostrzega to architekta/inwestora o prawnych ograniczeniach terenu bez ryzyka fałszywych odczytów (uwzględnia krawędzie całej działki, a nie tylko kliknięty punkt na ekranie).
 
 ## 6. Architektura i Źródła Danych (API & Bazy)
 Aplikacja to czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6). Moduł mapowy to otwartoźródłowy **Leaflet.js (v1.9.4)**. Translacja układów współrzędnych realizowana przez bibliotekę matematyczną **Proj4js**.
@@ -46,7 +47,9 @@ Pobierane zbiory danych poprzez standardy OGC (WMS / REST API):
 - **Usługa Lokalizacji Działek Katastralnych (ULDK API):** Zwraca obrysy WKT i adresologię po współrzędnych XY oraz obsługuje wyszukiwarkę. Używana lokalnie poprzez konwersję lat/lng z wymuszonym WGS84 na płaski układ PUWG 1992 (EPSG:2180).
 
 ### B. Generalna Dyrekcja Ochrony Środowiska (GDOŚ) - Usługi SDI
-- **Formy Ochrony Przyrody (WMS):**
+- **Formy Ochrony Przyrody (WMS / WFS):**
+  - **Wizualizacja (WMS):** Kafelkowe serwowanie obrazów do swobodnego przeglądania mapy.
+  - **Analityka Przestrzenna (WFS):** Skrypt wykorzystuje Web Feature Service jako silnik zapytań wektorowych. Przekazuje on obrys WKT z ULDK do GDOŚ przez `CQL_FILTER=INTERSECTS(geom, ...)` celem sprawdzenia kolizji.
   - Parki Narodowe i Krajobrazowe
   - Ptasie i Siedliskowe obszary Natura 2000 (OSO/SOO)
   - Rezerwaty Przyrody, Pomniki Przyrody
@@ -61,3 +64,5 @@ Pobierane zbiory danych poprzez standardy OGC (WMS / REST API):
 ## 7. Ograniczenia i Założenia Systemowe (Disclaimer)
 Twórcy oparli funkcję na specyfice polskiego modelu agregacji danych KIEG/KIUT: system centralnego WMS rządu zadaje kaskadowe w locie zapytania do rozsianych serwerów strefowych setek ośrodków szczebla powiatowego (PODGiK).
 Oznacza to, że widoczność sieci (lub jej brak) bezpośrednio odzwierciedla elektroniczny, realny stan cyfryzacji bazy w konkretnym starostwie. Brak kreski dla sieci na mapie nie oznacza prawnej lub fizycznej nieobecności infrastruktury pod ziemią, o czym użytkownik jest trwale informowany na dedykowanym panelu UI.
+
+Podobnie w przypadku wyników "Analizy Ograniczeń Środowiskowych" – system raportuje bezpośrednie kolizje z prawnymi, wielkopowierzchniowymi strefami chronionymi wyłącznie z rejestru form ochrony przyrody państwowego GDOŚ. Rozwiązanie to nie zwalnia z weryfikacji Miejscowych Planów Zagospodarowania Przestrzennego (MPZP) ani ewidencji miejskich konserwatorów zabytków. Odpowiedni Disclaimer (zastrzeżenie) jest na stałe dołączony do okna wyników analizy chłonnościowej dla bezpieczeństwa użytkownika.
