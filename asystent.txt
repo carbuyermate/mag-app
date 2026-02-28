@@ -1,0 +1,63 @@
+# Mobilny Asystent Geodezyjny (MAG) - Dokumentacja i Specyfikacja Projektu
+
+## 1. O aplikacji (Czym jest MAG?)
+Mobilny Asystent Geodezyjny to ultralekka, bezpieczna, jednoplikowa aplikacja internetowa (Single-Page Application w architekturze HTML/CSS/JS), pełniąca funkcję podręcznego systemu informacji przestrzennej (GIS). Służy do błyskawicznej weryfikacji danych geodezyjnych, administracyjnych, infrastrukturalnych i ekologicznych na ekranie telefonu lub komputera, bez konieczności instalowania oprogramowania czy zakładania kont.
+
+## 2. Dla kogo jest ta aplikacja? (Grupa Docelowa)
+Narzędzie zostało stworzone z myślą o profesjonalistach pracujących "w terenie" oraz osobach potrzebujących natychmiastowego dostępu do danych katastralnych:
+- Geodeci (rozpoznanie terenu, lokalizacja punktów startowych, weryfikacja uzbrojenia)
+- Architekci i projektanci (szybka ocena chłonności działki, kolizji z sieciami, stref p.poż/ochronnych)
+- Urzędnicy i inspektorzy nadzoru budowlanego (kontrola w terenie)
+- Rzeczoznawcy majątkowi i pośrednicy nieruchomości
+- Inwestorzy prywatni kupujący działki lub planujący budowę
+
+## 3. Jaki rozwiązuje problem? (Wartość dla Użytkownika)
+Praca z oficjalnymi portalem Geoportal.gov.pl na urządzeniach mobilnych jest wysoce niepraktyczna (skomplikowany interfejs, ogromne obciążenie pamięci telefonu, uciążliwa nawigacja). Mobilny Asystent Geodezyjny rozwiązuje ten problem, oferując:
+- **Błyskawiczny czas ładowania:** Aplikacja waży kilkadziesiąt kilobajtów i ładuje mapę natychmiast.
+- **Interfejs "Mobile-First":** Duże przyciski, intuicyjne przełączniki (toggles), pełnokranowa mapa optymalizowana pod dotyk i obsługę jedną ręką (np. w słońcu, na budowie).
+- **Zasada "Jeden plik = jedno narzędzie":** Aplikację można pobrać na dysk/telefon, wysłać mailem i uruchomić offline (logika i interfejs; mapy ładują się z sieci).
+- **Agregacja rozproszonych danych w jednym miejscu:** Użytkownik nie musi przełączać się między wieloma geoportalami (branżowymi, GDOŚ, GUGiK) - MAG nakłada je wszystkie na jedną ośrodek mapowy.
+
+## 4. Czym różni się od rządowych i komercyjnych portali rynkowych?
+- **Brak przeładowania funkcjami (Over-engineering):** Zamiast tysięcy opcji analitycznych, narzędzi pomiarowych i warstw historycznych (jak w QGIS czy pełnym Geoportalu), MAG stawia na ascetyczne minimum: "Pokaż mi, gdzie jestem (GPS), daj mi adres, nałóż działki, uzbrojenie i strefy ekologiczne".
+- **Bezpieczeństwo i prywatność:** Aplikacja działa wyłącznie w przeglądarce klienta (Client-Side). Nie korzysta z żadnych baz pośredniczących (backendu), nie śledzi ruchów użytkownika ani nie loguje zapytań na prywatnych serwerach. Komunikuje się bezpośrednio (P2P) z serwerami polskiego rządu. Wymusza prywatność.
+- **Bypass CORS dla lokalnego użytku:** Unikalne rozwiązanie wbudowanego dynamicznego proxy (`corsproxy.io`) pozwala uruchamiać potężne skrypty analityczne bezpośrednio z pliku na pulpicie (lokalnie), omijając zabezpieczenia Cross-Origin, które normalnie blokują komunikację z państwowymi API w przypadku braku certyfikowanego serwera.
+
+## 5. Kluczowe Funkcje Aplikacji
+- ** Geolokalizacja GPS na żywo:** Przycisk centrowania kamery mapy bezpośrednio na fizycznej lokalizacji użytkownika stojącego w szczerym polu.
+- ** Inteligentna Wyszukiwarka Adresów:** System autouzupełniania bazujący w pierwszej kolejności na państwowym API (ULDK GUGiK) operującym na oficjalnym słowniku TERYT, a w przypadku błędu – na światowym silniku Nominatim (OpenStreetMap).
+- ** Identyfikacja Działki (Click-to-identify):** Kliknięcie w dowolny punkt mapy wyświetla w bocznym i dolnym panelu szczegółowe metadane geometryczne z GUGiK (Numer ewidencyjny działki, Obręb, Gmina, Województwo, numeryczny kod TERYT).
+- ** Multi-warstwowy podkład mapowy:** Możliwość swobodnego i płynnego przełączania baz formatki między OpenStreetMap, Google Maps Satelita, Esri World Imagery oraz Państwową Ortofotomapą GUGiK wysokiej rozdzielczości.
+- ** Engine Mapowy o głębokim powiększeniu (Deep Zoom):** Zmodyfikowany silnik mapowy Leaflet skalujący kafelki za pomocą "maxNativeZoom" poza standardowe limity (do zoomu 24), co pozwala oglądać sub-metrowe detale infrastruktury podziemnej bez znikania warstw.
+- ** Optymalizacja czytelności wektorów (DPI Hack):** Wymuszenie na serwerach rządowych renderingu z High-DPI (150dpi) oraz nad-próbkowanie obrazu kafelków WMS (tileSize: 512, zoomOffset: -1) celem pogrubienia mikroskopijnych, 1-pikselowych linii ewidencyjnych i infrastrukturalnych, poprawiając drastycznie czytelność pod słońcem na ekranie roboczym.
+
+## 6. Architektura i Źródła Danych (API & Bazy)
+Aplikacja to czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6). Moduł mapowy to otwartoźródłowy **Leaflet.js (v1.9.4)**. Translacja układów współrzędnych realizowana przez bibliotekę matematyczną **Proj4js**.
+
+Pobierane zbiory danych poprzez standardy OGC (WMS / REST API):
+
+### A. Główny Urząd Geodezji i Kartografii (GUGiK)
+- **Podział Administracyjny i Ewidencja (KIEG - Krajowa Integracja Ewidencji Gruntów):**
+  - Granice i numery działek ewidencyjnych
+  - Kontury budynków (części nadziemne EGiB)
+- **Uzbrojenie Terenu (KIUT - Krajowa Integracja Uzbrojenia Terenu) [Wektorowe dane od Starostw z kolorystyką K-1]:**
+  - Przewody Wodociągowe, Kanalizacyjne, Gazowe, Elektroenergetyczne, Ciepłownicze, Telekomunikacyjne, Specjalne
+- **Ortofotomapa (WMS HighResolution):** Lotnicze zdjęcia powierzchni kraju
+- **Usługa Lokalizacji Działek Katastralnych (ULDK API):** Zwraca obrysy WKT i adresologię po współrzędnych XY oraz obsługuje wyszukiwarkę. Używana lokalnie poprzez konwersję lat/lng z wymuszonym WGS84 na płaski układ PUWG 1992 (EPSG:2180).
+
+### B. Generalna Dyrekcja Ochrony Środowiska (GDOŚ) - Usługi SDI
+- **Formy Ochrony Przyrody (WMS):**
+  - Parki Narodowe i Krajobrazowe
+  - Ptasie i Siedliskowe obszary Natura 2000 (OSO/SOO)
+  - Rezerwaty Przyrody, Pomniki Przyrody
+  - Użytki Ekologiczne i Zespoły Przyrodniczo-Krajobrazowe
+  - Obszary Chronionego Krajobrazu
+  - Stanowiska Dokumentacyjne
+
+### C. Zewnętrzne Bazy Alternatywne
+- **OpenStreetMap:** Poprzez serwery bazowe (Mapnik) oraz silnik geokodujący Nominatim.
+- **Google / Esri Server:** Warstwy komercyjne zdjęć satelitarnych wyciągane przez bezpośrednie zapytania do Endpointów serwerów kafelkowych XYZ.
+
+## 7. Ograniczenia i Założenia Systemowe (Disclaimer)
+Twórcy oparli funkcję na specyfice polskiego modelu agregacji danych KIEG/KIUT: system centralnego WMS rządu zadaje kaskadowe w locie zapytania do rozsianych serwerów strefowych setek ośrodków szczebla powiatowego (PODGiK).
+Oznacza to, że widoczność sieci (lub jej brak) bezpośrednio odzwierciedla elektroniczny, realny stan cyfryzacji bazy w konkretnym starostwie. Brak kreski dla sieci na mapie nie oznacza prawnej lub fizycznej nieobecności infrastruktury pod ziemią, o czym użytkownik jest trwale informowany na dedykowanym panelu UI.

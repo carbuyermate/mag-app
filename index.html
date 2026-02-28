@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobilny Asystent Geodezyjny</title>
+    <meta name="description"
+        content="Interaktywna mapa katastralna Polski – działki, uzbrojenie terenu, ochrona przyrody. Dane z GUGiK, GDOŚ i innych źródeł rządowych.">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #21262d;
+            --bg-hover: #2d333b;
+            --border: #30363d;
+            --accent: #2ea043;
+            --accent-glow: rgba(46, 160, 67, 0.25);
+            --accent2: #388bfd;
+            --accent2-glow: rgba(56, 139, 253, 0.2);
+            --warn: #e3b341;
+            --danger: #f85149;
+            --text-primary: #e6edf3;
+            --text-sec: #8b949e;
+            --text-muted: #484f58;
+            --radius: 10px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --sidebar-w: 340px;
+            --toolbar-h: 56px;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        /* ═══════════════════════════════ LAYOUT ═══════════════════════════════ */
+        #app {
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        #map {
+            flex: 1;
+            height: 100%;
+            position: relative;
+        }
+
+        /* ═══════════════════════════════ SIDEBAR ═══════════════════════════════ */
+        #sidebar {
+            width: var(--sidebar-w);
+            height: 100%;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        #sidebar-header {
+            padding: 16px 16px 12px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-dark);
+            flex-shrink: 0;
+        }
+
+        .logo-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .logo-text {
+            line-height: 1.2;
+        }
+
+        .logo-text h1 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .logo-text span {
+            font-size: 10px;
+            color: var(--text-sec);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        /* Search */
+        #search-box {
+            display: flex;
+            gap: 6px;
+        }
+
+        #search-input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: var(--text-primary);
+            font-family: inherit;
+            outline: none;
+            transition: border-color .2s;
+        }
+
+        #search-input:focus {
+            border-color: var(--accent2);
+            box-shadow: 0 0 0 2px var(--accent2-glow);
+        }
+
+        #search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        #search-btn {
+            background: var(--accent2);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background .2s, transform .1s;
+            flex-shrink: 0;
+        }
+
+        #search-btn:hover {
+            background: #1a73e8;
+        }
+
+        #search-btn:active {
+            transform: scale(.95);
+        }
+
+        /* Search results dropdown */
+        #search-results {
+            position: absolute;
+            top: calc(var(--toolbar-h) + 100px);
+            left: 12px;
+            width: calc(var(--sidebar-w) - 24px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            z-index: 9999;
+            box-shadow: var(--shadow);
+            display: none;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .sr-item {
+            padding: 10px 14px;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+            line-height: 1.4;
+        }
+
+        .sr-item:last-child {
+            border-bottom: none;
+        }
+
+        .sr-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .sr-label {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .sr-sub {
+            color: var(--text-sec);
+            font-size: 11px;
+        }
+
+        /* Sidebar body */
+        #sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .section {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            transition: background .15s;
+        }
+
+        .section-header:hover {
+            background: var(--bg-hover);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--text-sec);
+        }
+
+        .section-title i {
+            font-size: 12px;
+            width: 14px;
+            text-align: center;
+        }
+
+        .section-chevron {
+            color: var(--text-muted);
+            font-size: 10px;
+            transition: transform .2s;
+        }
+
+        .section-chevron.open {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            padding: 8px 16px 12px;
+        }
+
+        .section-content.hidden {
+            display: none;
+        }
+
+        /* Base layer radio */
+        .base-opt {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background .15s;
+            margin-bottom: 4px;
+        }
+
+        .base-opt:hover {
+            background: var(--bg-hover);
+        }
+
+        .base-opt input[type=radio] {
+            accent-color: var(--accent2);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        .base-opt-info {
+            flex: 1;
+        }
+
+        .base-opt-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .base-opt-desc {
+            font-size: 11px;
+            color: var(--text-sec);
+            margin-top: 1px;
+        }
+
+        .base-opt-icon {
+            font-size: 20px;
+            width: 28px;
+            text-align: center;
+        }
+
+        /* Overlay toggles */
+        .ovr-group {
+            margin-bottom: 6px;
+        }
+
+        .ovr-group-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--text-muted);
+            padding: 6px 0 4px;
+        }
+
+        .ovr-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background .15s;
+            margin-bottom: 2px;
+        }
+
+        .ovr-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .ovr-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ovr-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .ovr-name {
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        /* Toggle switch */
+        .toggle {
+            position: relative;
+            width: 34px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background .2s, border-color .2s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            left: 2px;
+            top: 2px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transition: transform .2s, background .2s;
+        }
+
+        .toggle input:checked+.toggle-slider {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toggle input:checked+.toggle-slider::before {
+            transform: translateX(16px);
+            background: #fff;
+        }
+
+        /* Info panel */
+        #info-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            margin: 10px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+
+        #info-panel.visible {
+            display: block;
+        }
+
+        .info-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--accent);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-row {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            background: var(--bg-dark);
+            border-radius: 6px;
+            padding: 6px 10px;
+            word-break: break-all;
+            border: 1px solid var(--border);
+        }
+
+        .info-value.mono {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            letter-spacing: .3px;
+        }
+
+        /* Status bar */
+        #status-bar {
+            padding: 8px 14px;
+            background: var(--bg-dark);
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        #status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        #status-dot.loading {
+            background: var(--warn);
+            animation: pulse 1s infinite;
+        }
+
+        #status-dot.error {
+            background: var(--danger);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .3
+            }
+        }
+
+        /* ═══════════════════════════════ FLOATING BUTTONS ═══════════════════════════════ */
+        #fab-container {
+            position: absolute;
+            bottom: 28px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 900;
+        }
+
+        .fab {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: var(--shadow);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+        }
+
+        .fab:active {
+            transform: scale(.95);
+        }
+
+        #btn-gps {
+            background: linear-gradient(135deg, var(--accent), #1a7a32);
+            color: #fff;
+        }
+
+        #btn-menu {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text-sec);
+            display: none;
+        }
+
+        /* ═══════════════════════════════ COORDINATES BAR ═══════════════════════════════ */
+        #coord-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: rgba(13, 17, 23, .85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 10px;
+            color: var(--text-muted);
+            z-index: 800;
+            gap: 16px;
+            pointer-events: none;
+        }
+
+        #coord-bar span {
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ═══════════════════════════════ LOADING OVERLAY ═══════════════════════════════ */
+        #api-spinner {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(22, 27, 34, .92);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: var(--text-sec);
+            align-items: center;
+            gap: 8px;
+            z-index: 2000;
+            display: none;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(4px);
+        }
+
+        #api-spinner .spin {
+            animation: spin 1s linear infinite;
+            color: var(--accent2);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ═══════════════════════════════ MOBILE ═══════════════════════════════ */
+        #sidebar-toggle {
+            display: none;
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 1500;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-sec);
+            font-size: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        @media (max-width: 700px) {
+            :root {
+                --sidebar-w: 100vw;
+            }
+
+            #app {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: min(360px, 90vw);
+                transform: translateX(-100%);
+                z-index: 1400;
+                box-shadow: 4px 0 24px rgba(0, 0, 0, .6);
+            }
+
+            #sidebar.open {
+                transform: translateX(0);
+            }
+
+            #sidebar-toggle {
+                display: flex;
+            }
+
+            #fab-container {
+                bottom: 36px;
+                right: 12px;
+            }
+
+            #map {
+                width: 100%;
+                height: 100%;
+            }
+
+            #search-results {
+                width: min(340px, 92vw);
+                left: 8px;
+                top: 8px;
+                position: fixed;
+            }
+        }
+
+        /* ═══════════════════════════════ LEAFLET OVERRIDES ═══════════════════════════════ */
+        .leaflet-control-zoom {
+            border: 1px solid var(--border) !important;
+            border-radius: 10px !important;
+            overflow: hidden;
+        }
+
+        .leaflet-control-zoom a {
+            background: var(--bg-panel) !important;
+            color: var(--text-sec) !important;
+            border-color: var(--border) !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: var(--bg-hover) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius) !important;
+            box-shadow: var(--shadow) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--bg-card) !important;
+        }
+
+        .leaflet-popup-close-button {
+            color: var(--text-sec) !important;
+        }
+
+        .leaflet-popup-close-button:hover {
+            color: var(--text-primary) !important;
+        }
+
+        .leaflet-popup-content {
+            margin: 14px 16px !important;
+            font-family: 'Inter', sans-serif !important;
+            min-width: 200px;
+        }
+
+        .pop-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .pop-row {
+            margin-bottom: 6px;
+        }
+
+        .pop-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .4px;
+        }
+
+        .pop-val {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-top: 2px;
+            word-break: break-all;
+        }
+
+        .pop-val.mono {
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        /* Scale */
+        .leaflet-control-scale-line {
+            background: rgba(13, 17, 23, .7) !important;
+            border-color: var(--border) !important;
+            color: var(--text-muted) !important;
+            font-size: 10px !important;
+        }
+
+        /* ═══════════════════════════════ WELCOME OVERLAY ═══════════════════════════════ */
+        #welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-card {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: var(--radius);
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .welcome-card h2 {
+            color: var(--danger);
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .welcome-card p {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            text-align: left;
+        }
+
+        .welcome-card ul {
+            text-align: left;
+            margin: 10px 0 10px 20px;
+            font-size: 13px;
+            color: var(--text-sec);
+            line-height: 1.5;
+        }
+
+        .welcome-card li {
+            margin-bottom: 6px;
+        }
+
+        .accept-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.2s;
+        }
+
+        .accept-btn:hover {
+            background: #3ab552;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Welcome Overlay -->
+    <div id="welcome-overlay">
+        <div class="welcome-card">
+            <h2><i class="fa fa-exclamation-triangle"></i> Ważny komunikat</h2>
+            <p>
+                <b>Mobilny Asystent Geodezyjny (MAG)</b> agreguje dane z publicznych serwerów państwowych (GUGiK, GDOŚ).
+                <br><br>
+                <b>Pamiętaj:</b>
+            </p>
+            <ul>
+                <li>Prezentowane dane mają charakter wyłącznie <b>poglądowy</b> i nie mogą być podstawą do prac
+                    budowlanych czy czynności prawnych.</li>
+                <li>Dostępność mediów zależy od stopnia cyfryzacji danego powiatu. Brak linii na mapie nie oznacza braku
+                    infrastruktury w ziemi.</li>
+                <li>W przypadku awarii serwerów rządowych, aplikacja może wyświetlać niepełne bądź niedokładne dane.
+                </li>
+            </ul>
+            <button class="accept-btn" onclick="acceptTerms()">Rozumiem i akceptuję</button>
+        </div>
+    </div>
+
+    <script>
+        function acceptTerms() {
+            document.getElementById('welcome-overlay').style.display = 'none';
+            localStorage.setItem('mag_terms_accepted', 'true');
+        }
+
+        // Auto-ukrywanie jeśli już zaakceptowano
+        if (localStorage.getItem('mag_terms_accepted') === 'true') {
+            document.getElementById('welcome-overlay').style.display = 'none';
+        }
+    </script>
+
+    <div id="app">
+
+        <!-- ══════════════════ SIDEBAR ══════════════════ -->
+        <div id="sidebar">
+            <div id="sidebar-header">
+                <div class="logo-row">
+                    <div class="logo-icon">🗾</div>
+                    <div class="logo-text">
+                        <h1>Asystent Geodezyjny</h1>
+                        <span>Polska · GUGiK · GDOŚ</span>
+                    </div>
+                </div>
+                <div id="search-box">
+                    <input type="text" id="search-input" placeholder="Wpisz adres, np. Warszawa, Polna 1…"
+                        autocomplete="off" autocorrect="off" spellcheck="false">
+                    <button id="search-btn" title="Szukaj">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+                <div id="search-results"></div>
+            </div>
+
+            <div id="sidebar-body">
+
+                <!-- ── Warstwy podkładowe ── -->
+                <div class="section">
+                    <div class="section-header" data-target="sec-base">
+                        <div class="section-title"><i class="fa fa-layer-group"></i> Podkład mapowy</div>
+                        <i class="fa fa-chevron-down section-chevron open"></i>
+                    </div>
+                    <div class="section-content" id="sec-base">
+                        <label class="base-opt">
+                            <input type="radio" name="base" value="osm" checked>
+                            <span class="base-opt-icon">🗺</span>
+                            <div class="base-opt-info">
+                                <div class="base-opt-name">OpenStreetMap</div>
+                                <div class="base-opt-desc">Mapa drogowa, szybka i czytelna</div>
+                            </div>
+                        </label>
+                        <label class="base-opt">
+                            <input type="radio" name="base" value="google">
+                            <span class="base-opt-icon">🛰</span>
+                            <div class="base-opt-info">
+                                <div class="base-opt-name">Satelita Google</div>
+                                <div class="base-opt-desc">Aktualne zdjęcia satelitarne</div>
+                            </div>
+                        </label>
+                        <label class="base-opt">
+                            <input type="radio" name="base" value="esri">
+                            <span class="base-opt-icon">🌍</span>
+                            <div class="base-opt-info">
+                                <div class="base-opt-name">Esri World Imagery</div>
+                                <div class="base-opt-desc">Zdjęcia Esri – wysoka rozdzielczość</div>
+                            </div>
+                        </label>
+                        <label class="base-opt">
+                            <input type="radio" name="base" value="orto">
+                            <span class="base-opt-icon">📷</span>
+                            <div class="base-opt-info">
+                                <div class="base-opt-name">Ortofotomapa PL (GUGiK)</div>
+                                <div class="base-opt-desc">Oficjalne zdjęcia lotnicze, Polska</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ── Ewidencja gruntów ── -->
+                <div class="section">
+                    <div class="section-header" data-target="sec-egib">
+                        <div class="section-title"><i class="fa fa-draw-polygon"></i> Ewidencja gruntów</div>
+                        <i class="fa fa-chevron-down section-chevron open"></i>
+                    </div>
+                    <div class="section-content" id="sec-egib">
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#f97316"></div>
+                                <span class="ovr-name">Granice działek</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="ovr-dzialki"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#fb923c"></div>
+                                <span class="ovr-name">Numery działek</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="ovr-numery" checked><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#60a5fa"></div>
+                                <span class="ovr-name">Budynki (EGiB)</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="ovr-budynki"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Uzbrojenie terenu ── -->
+                <div class="section">
+                    <div class="section-header" data-target="sec-kiut">
+                        <div class="section-title"><i class="fa fa-project-diagram"></i> Uzbrojenie terenu</div>
+                        <i class="fa fa-chevron-down section-chevron"></i>
+                    </div>
+                    <div class="section-content hidden" id="sec-kiut">
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#3b82f6"></div><span class="ovr-name">💧 Sieć
+                                    wodociągowa</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-woda"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#a16207"></div><span class="ovr-name">🚽 Sieć
+                                    kanalizacyjna</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-kanal"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#eab308"></div><span class="ovr-name">🔥 Sieć
+                                    gazowa</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-gaz"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#ef4444"></div><span class="ovr-name">⚡ Sieć
+                                    elektroenergetyczna</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-prad"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#a855f7"></div><span class="ovr-name">🌡 Sieć
+                                    ciepłownicza</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-cieplo"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#f97316"></div><span class="ovr-name">📡 Sieć
+                                    telekomunikacyjna</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-telekom"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#475569"></div><span class="ovr-name">🔧 Sieć
+                                    specjalna</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-spec"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#9ca3af"></div><span class="ovr-name">❓ Sieci
+                                    niezidentyfikowane</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-niezid"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#334155"></div><span class="ovr-name">⚙️
+                                    Urządzenia infrastrukturalne</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="kiut-urz"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
+                        <div
+                            style="margin-top: 15px; padding: 10px; border-radius: 6px; background-color: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.2); font-size: 11px; line-height: 1.5; color: #fbbf24;">
+                            <i class="fa fa-exclamation-triangle" style="margin-right: 5px;"></i> <b>Ważne:</b> Widoczne
+                            od przybliżenia 1:2000. Dane pochodzą na żywo z powiatowych urzędów. Wiele samorządów w
+                            Polsce ma zdigitalizowany tylko ułamek starych rur (np. zgłaszanych niedawno przyłączy
+                            gazu). <br><br><u>Brak narysowanej sieci na tej mapie nie oznacza jej braku w ziemi!</u>
+                            Aplikacja ukazuje obecny, rzeczywisty stan państwowych rejestrów.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Ochrona przyrody ── -->
+                <div class="section">
+                    <div class="section-header" data-target="sec-eco">
+                        <div class="section-title"><i class="fa fa-leaf"></i> Ochrona przyrody</div>
+                        <i class="fa fa-chevron-down section-chevron"></i>
+                    </div>
+                    <div class="section-content hidden" id="sec-eco">
+
+                        <div class="ovr-group">
+                            <div class="ovr-group-title">Natura 2000</div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#22c55e"></div><span class="ovr-name">Obszary
+                                        siedliskowe (SOO)</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-soo"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#4ade80"></div><span class="ovr-name">Obszary
+                                        ptasie (OSO)</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-oso"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                        </div>
+
+                        <div class="ovr-group">
+                            <div class="ovr-group-title">Formy ochrony krajowej</div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#059669"></div><span class="ovr-name">Parki
+                                        narodowe</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-pn"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#10b981"></div><span class="ovr-name">Parki
+                                        krajobrazowe</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-pk"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#34d399"></div><span
+                                        class="ovr-name">Rezerwaty przyrody</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-rez"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#6ee7b7"></div><span class="ovr-name">Obszary
+                                        chron. krajobrazu</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-ochk"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#a7f3d0"></div><span class="ovr-name">Użytki
+                                        ekologiczne</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-ue"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#34d399"></div><span class="ovr-name">Zespoły
+                                        przyr.-krajobrazowe</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-zpk"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                        </div>
+
+                        <div class="ovr-group">
+                            <div class="ovr-group-title">Inne</div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#f472b6"></div><span class="ovr-name">Pomniki
+                                        przyrody</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-pom"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                            <div class="ovr-item">
+                                <div class="ovr-item-left">
+                                    <div class="ovr-dot" style="background:#c084fc"></div><span
+                                        class="ovr-name">Stanowiska dokumentacyjne</span>
+                                </div>
+                                <label class="toggle"><input type="checkbox" id="eco-std"><span
+                                        class="toggle-slider"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info panel -->
+                <div id="info-panel">
+                    <div class="info-title"><i class="fa fa-map-pin"></i> Informacje o działce</div>
+                    <div id="info-content"></div>
+                </div>
+
+            </div><!-- sidebar-body -->
+
+            <div id="status-bar">
+                <div id="status-dot"></div>
+                <span id="status-text">Gotowy · dane z GUGiK i GDOŚ</span>
+            </div>
+        </div><!-- sidebar -->
+
+        <!-- Mobile toggle button -->
+        <button id="sidebar-toggle" title="Menu">
+            <i class="fa fa-bars"></i>
+        </button>
+
+        <!-- Map -->
+        <div id="map"></div>
+
+        <!-- FABs -->
+        <div id="fab-container">
+            <button class="fab" id="btn-gps" title="Moja lokalizacja">
+                <i class="fa fa-location-crosshairs"></i>
+            </button>
+        </div>
+
+        <!-- Coord bar -->
+        <div id="coord-bar">
+            <span>📍 kliknij mapę aby sprawdzić działkę</span>
+            <span id="coord-lat"></span>
+            <span id="coord-lng"></span>
+        </div>
+
+        <!-- API Spinner -->
+        <div id="api-spinner">
+            <i class="fa fa-circle-notch spin"></i>
+            <span id="spinner-text">Pobieranie danych…</span>
+        </div>
+
+    </div><!-- app -->
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Proj4js for EPSG:2180 (PUWG 1992) conversions -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
+
+    <script>
+        'use strict';
+
+        // ════════════════════════════════════════════════
+        // POLAND BOUNDS & PROJECTIONS
+        // ════════════════════════════════════════════════
+        const PL_BOUNDS = L.latLngBounds(
+            L.latLng(49.002, 14.122),   // SW
+            L.latLng(54.836, 24.146)    // NE
+        );
+        const PL_CENTER = [52.069, 19.481];
+        const PL_INIT_ZOOM = 7;
+
+        // Definicja polskiego układu PUWG 1992 (EPSG:2180)
+        proj4.defs("EPSG:2180", "+proj=tmerc +lat_0=0 +lon_0=19 +k=0.9993 +x_0=500000 +y_0=-5300000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
+
+        // ════════════════════════════════════════════════
+        // MAP INIT
+        // ════════════════════════════════════════════════
+        const map = L.map('map', {
+            center: PL_CENTER,
+            zoom: PL_INIT_ZOOM,
+            maxBounds: PL_BOUNDS.pad(0.15),
+            maxBoundsViscosity: 0.8,
+            zoomControl: true,
+            attributionControl: true,
+            minZoom: 6,
+            maxZoom: 24, // Allow deep overzoom
+        });
+
+        L.control.scale({ imperial: false, maxWidth: 200, position: 'bottomright' }).addTo(map);
+
+        // ════════════════════════════════════════════════
+        // BASE LAYERS
+        // ════════════════════════════════════════════════
+        const baseLayers = {
+            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxNativeZoom: 19,
+                maxZoom: 24,
+                bounds: PL_BOUNDS,
+            }),
+            google: L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                attribution: '© Google',
+                maxNativeZoom: 21,
+                maxZoom: 24,
+                bounds: PL_BOUNDS,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            }),
+            esri: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '© <a href="https://www.esri.com/">Esri</a>',
+                maxNativeZoom: 19,
+                maxZoom: 24,
+                bounds: PL_BOUNDS,
+            }),
+            orto: L.tileLayer.wms('https://mapy.geoportal.gov.pl/wss/service/PZGIK/ORTO/WMS/HighResolution', {
+                layers: 'Raster',
+                format: 'image/jpeg',
+                version: '1.3.0',
+                transparent: false,
+                attribution: '© GUGiK – Ortofotomapa',
+                maxNativeZoom: 21,
+                maxZoom: 24,
+                bounds: PL_BOUNDS,
+                styles: '',
+            }),
+        };
+
+        baseLayers.osm.addTo(map);
+        let currentBase = 'osm';
+
+        // ════════════════════════════════════════════════
+        // OVERLAY LAYERS
+        // ════════════════════════════════════════════════
+        const KIEG = 'https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow';
+        const KIUT = 'https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu';
+        const GDOS = 'https://sdi.gdos.gov.pl/wms';
+
+        // Use dpi:120 or 150 to tell the WMS server to render fatter lines/fonts
+        const WMS_COMMON = {
+            format: 'image/png',
+            transparent: true,
+            version: '1.1.1',
+            opacity: 0.9,
+            maxZoom: 24,
+            format_options: 'dpi:150'
+        };
+
+        function makeKIEG(layers, opacity = 0.9) {
+            // tileSize: 512 + zoomOffset: -1 to sztuczka podwajająca grubość linii (rozciąga kafelki 256px do 512px)
+            return L.tileLayer.wms(KIEG, { ...WMS_COMMON, layers, opacity, styles: '', tileSize: 512, zoomOffset: -1 });
+        }
+        function makeKIUT(layers, opacity = 1.0) {
+            return L.tileLayer.wms(KIUT, { ...WMS_COMMON, layers, opacity, styles: '', tileSize: 512, zoomOffset: -1 });
+        }
+        function makeGDOS(layers, opacity = 0.65) {
+            return L.tileLayer.wms(GDOS, { ...WMS_COMMON, layers, opacity, styles: '', attribution: '© GDOŚ' });
+        }
+
+        const overlayDefs = {
+            'ovr-dzialki': { fn: () => makeKIEG('dzialki'), label: 'Granice działek' },
+            'ovr-numery': { fn: () => makeKIEG('numery_dzialek'), label: 'Numery działek' },
+            'ovr-budynki': { fn: () => makeKIEG('budynki'), label: 'Budynki' },
+            'kiut-woda': { fn: () => makeKIUT('przewod_wodociagowy'), label: 'Woda' },
+            'kiut-kanal': { fn: () => makeKIUT('przewod_kanalizacyjny'), label: 'Kanalizacja' },
+            'kiut-gaz': { fn: () => makeKIUT('przewod_gazowy'), label: 'Gaz' },
+            'kiut-prad': { fn: () => makeKIUT('przewod_elektroenergetyczny'), label: 'Elektryczność' },
+            'kiut-cieplo': { fn: () => makeKIUT('przewod_cieplowniczy'), label: 'Ciepłownictwo' },
+            'kiut-telekom': { fn: () => makeKIUT('przewod_telekomunikacyjny'), label: 'Telekomunikacja' },
+            'kiut-spec': { fn: () => makeKIUT('przewod_specjalny'), label: 'Sieć specjalna' },
+            'kiut-niezid': { fn: () => makeKIUT('przewod_niezidentyfikowany'), label: 'Niezidentyfikowane' },
+            'kiut-urz': { fn: () => makeKIUT('przewod_urzadzenia'), label: 'Urządzenia' },
+
+            // GDO\u015a \u2013 nazwy warstw z GetCapabilities
+            'eco-soo': { fn: () => makeGDOS('GDOS:SpecjalneObszaryOchrony'), label: 'Natura 2000 siedlisk. (SOO)' },
+            'eco-oso': { fn: () => makeGDOS('GDOS:ObszarySpecjalnejOchrony'), label: 'Natura 2000 ptasie (OSO)' },
+            'eco-pn': { fn: () => makeGDOS('GDOS:ParkiNarodowe'), label: 'Parki narodowe' },
+            'eco-pk': { fn: () => makeGDOS('GDOS:ParkiKrajobrazowe'), label: 'Parki krajobrazowe' },
+            'eco-rez': { fn: () => makeGDOS('GDOS:Rezerwaty'), label: 'Rezerwaty przyrody' },
+            'eco-ochk': { fn: () => makeGDOS('GDOS:ObszaryChronionegoKrajobrazu'), label: 'Obszary chr. krajobrazu' },
+            'eco-ue': { fn: () => makeGDOS('GDOS:UzytkiEkologiczne'), label: 'U\u017cytki ekologiczne' },
+            'eco-zpk': { fn: () => makeGDOS('GDOS:ZespolyPrzyrodniczoKrajobrazowe'), label: 'Zesp. przyr.-krajobr.' },
+            'eco-pom': { fn: () => makeGDOS('GDOS:PomnikiPrzyrody'), label: 'Pomniki przyrody' },
+            'eco-std': { fn: () => makeGDOS('GDOS:StanowiskaDokumentacyjne'), label: 'Stanowiska dokument.' },
+        };
+
+        const activeOverlays = {}; // id -> L.Layer
+
+        function toggleOverlay(id, on) {
+            if (on) {
+                if (activeOverlays[id]) return;
+                const layer = overlayDefs[id].fn();
+                layer.addTo(map);
+                activeOverlays[id] = layer;
+            } else {
+                if (activeOverlays[id]) {
+                    map.removeLayer(activeOverlays[id]);
+                    delete activeOverlays[id];
+                }
+            }
+        }
+
+        // Init checked overlays
+        document.querySelectorAll('[id^="ovr-"],[id^="eco-"],[id^="kiut-"]').forEach(cb => {
+            if (cb.checked) toggleOverlay(cb.id, true);
+            cb.addEventListener('change', e => toggleOverlay(e.target.id, e.target.checked));
+        });
+
+        // Also fire numery on startup
+        setTimeout(() => {
+            const numEl = document.getElementById('ovr-numery');
+            if (numEl && numEl.checked) toggleOverlay('ovr-numery', true);
+        }, 200);
+
+        // ════════════════════════════════════════════════
+        // BASE LAYER SWITCH
+        // ════════════════════════════════════════════════
+        document.querySelectorAll('input[name="base"]').forEach(radio => {
+            radio.addEventListener('change', e => {
+                if (!e.target.checked) return;
+                map.removeLayer(baseLayers[currentBase]);
+                currentBase = e.target.value;
+                baseLayers[currentBase].addTo(map);
+                baseLayers[currentBase].bringToBack();
+            });
+        });
+
+        // ════════════════════════════════════════════════
+        // COLLAPSIBLES
+        // ════════════════════════════════════════════════
+        document.querySelectorAll('.section-header').forEach(hdr => {
+            hdr.addEventListener('click', () => {
+                const target = hdr.dataset.target;
+                const content = document.getElementById(target);
+                const chevron = hdr.querySelector('.section-chevron');
+                content.classList.toggle('hidden');
+                chevron.classList.toggle('open');
+            });
+        });
+
+        // ════════════════════════════════════════════════
+        // STATUS / UI HELPERS
+        // ════════════════════════════════════════════════
+        function setStatus(msg, state = 'ok') {
+            document.getElementById('status-text').textContent = msg;
+            const dot = document.getElementById('status-dot');
+            dot.className = '';
+            if (state === 'loading') dot.classList.add('loading');
+            if (state === 'error') dot.classList.add('error');
+        }
+
+        function showSpinner(msg = 'Pobieranie danych…') {
+            const s = document.getElementById('api-spinner');
+            s.style.display = 'flex';
+            document.getElementById('spinner-text').textContent = msg;
+        }
+        function hideSpinner() {
+            document.getElementById('api-spinner').style.display = 'none';
+        }
+
+        // ════════════════════════════════════════════════
+        // COORDINATES BAR
+        // ════════════════════════════════════════════════
+        map.on('mousemove', e => {
+            document.getElementById('coord-lat').textContent = `φ ${e.latlng.lat.toFixed(6)}`;
+            document.getElementById('coord-lng').textContent = `λ ${e.latlng.lng.toFixed(6)}`;
+        });
+
+        // ════════════════════════════════════════════════
+        // ULDK – CLICK TO IDENTIFY PARCEL
+        // ════════════════════════════════════════════════
+        let clickMarker = null;
+
+        map.on('click', async e => {
+            const { lat, lng } = e.latlng;
+            if (!PL_BOUNDS.contains(e.latlng)) return;
+
+            if (clickMarker) map.removeLayer(clickMarker);
+            clickMarker = L.circleMarker([lat, lng], {
+                radius: 7, color: '#388bfd', fillColor: '#388bfd33', fillOpacity: 1, weight: 2
+            }).addTo(map);
+
+            showSpinner('Identyfikuję działkę…');
+            setStatus('Pobieranie działki…', 'loading');
+
+            try {
+                // Konwersja kliknięcia WGS84 na PUWG1992 (ponieważ srid=4326 w GUGiKu się zawiesza)
+                const [x_2180, y_2180] = proj4("EPSG:4326", "EPSG:2180", [lng, lat]);
+
+                // Pobieranie danych z ULDK poprzez bezpośrednie zapytanie
+                const targetUrl = `https://uldk.gugik.gov.pl/?request=GetParcelByXY&xy=${x_2180},${y_2180}&result=parcel,region,teryt`;
+                const resp = await fetch(targetUrl, { signal: AbortSignal.timeout(5000) });
+                const text = await resp.text();
+                const lines = text.trim().split('\n');
+                // Response: code\nparcel|region|teryt
+                if (lines[0] === '0' && lines[1]) {
+                    const parts = lines[1].split('|');
+                    const parcel = parts[0] || '—';
+                    const region = parts[1] || '—';
+                    const teryt = parts[2] || '—';
+
+                    showParcelInfo(parcel, region, teryt, lat, lng);
+                    setStatus(`Działka: ${parcel}`, 'ok');
+
+                    clickMarker.bindPopup(buildPopup(parcel, region, teryt), { maxWidth: 280 }).openPopup();
+                } else {
+                    setStatus('Brak działki w tym punkcie', 'ok');
+                    clickMarker.bindPopup('<div class="pop-title">Brak danych</div><p style="color:var(--text-sec);font-size:12px">W tym punkcie nie znaleziono działki ewidencyjnej.</p>').openPopup();
+                    hideInfoPanel();
+                }
+            } catch (err) {
+                setStatus('Błąd połączenia z ULDK', 'error');
+                console.error('ULDK error:', err);
+            } finally {
+                hideSpinner();
+            }
+        });
+
+        function buildPopup(parcel, region, teryt) {
+            return `
+    <div class="pop-title"><i class="fa fa-map-pin"></i> Działka ewidencyjna</div>
+    <div class="pop-row">
+      <div class="pop-label">Numer działki</div>
+      <div class="pop-val mono">${parcel}</div>
+    </div>
+    <div class="pop-row">
+      <div class="pop-label">Obręb / Gmina</div>
+      <div class="pop-val">${region}</div>
+    </div>
+    <div class="pop-row">
+      <div class="pop-label">Identyfikator TERYT</div>
+      <div class="pop-val mono">${teryt}</div>
+    </div>`;
+        }
+
+        function showParcelInfo(parcel, region, teryt, lat, lng) {
+            const panel = document.getElementById('info-panel');
+            document.getElementById('info-content').innerHTML = `
+    <div class="info-row">
+      <div class="info-label">Numer działki</div>
+      <div class="info-value mono">${parcel}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Obręb / Gmina</div>
+      <div class="info-value">${region}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Identyfikator TERYT</div>
+      <div class="info-value mono">${teryt}</div>
+    </div>
+    <div class="info-row">
+      <div class="info-label">Współrzędne</div>
+      <div class="info-value mono">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+    </div>`;
+            panel.classList.add('visible');
+
+            // Open sidebar on mobile when info arrives
+            if (window.innerWidth <= 700) {
+                document.getElementById('sidebar').classList.add('open');
+            }
+        }
+
+        function hideInfoPanel() {
+            document.getElementById('info-panel').classList.remove('visible');
+        }
+
+        // ════════════════════════════════════════════════
+        // ADDRESS SEARCH  (UUG → Nominatim fallback)
+        // ════════════════════════════════════════════════
+        let searchMarker = null;
+        const srContainer = document.getElementById('search-results');
+        const searchInput = document.getElementById('search-input');
+
+        async function doSearch(query) {
+            if (!query.trim()) return;
+            showSpinner('Szukam adresu…');
+            setStatus('Wyszukiwanie adresu…', 'loading');
+            srContainer.style.display = 'none';
+            srContainer.innerHTML = '';
+
+            let results = [];
+
+            // 1) Try UUG (GUS / stat.gov.pl via ULDK)
+            try {
+                const targetUrl = `https://uldk.gugik.gov.pl/?request=GetAddressXY&address=${encodeURIComponent(query)}&result=address,parcel,teryt,geom_wkt`;
+                const r = await fetch(targetUrl, { signal: AbortSignal.timeout(5000) });
+                const t = await r.text();
+                const lines = t.trim().split('\n');
+                if (lines[0] === '0' && lines.length > 1) {
+                    // Parse ULDK address response: address|teryt|parcel|POINT(lng lat)
+                    lines.slice(1).forEach(line => {
+                        const parts = line.split('|');
+                        const addr = parts[0] || query;
+                        const geom = parts[parts.length - 1] || '';
+                        const ptMatch = geom.match(/POINT\(([0-9.]+)\s+([0-9.]+)\)/);
+                        if (ptMatch) {
+                            // ULDK domyślnie zwraca punkty w PUWG1992 (EPSG:2180)
+                            const x_2180 = parseFloat(ptMatch[1]);
+                            const y_2180 = parseFloat(ptMatch[2]);
+
+                            // Konwertujemy z powrotem na WGS84 dla Leafleta
+                            const [lng_wgs, lat_wgs] = proj4("EPSG:2180", "EPSG:4326", [x_2180, y_2180]);
+
+                            results.push({ label: addr, lat: lat_wgs, lng: lng_wgs, source: 'GUGiK' });
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('UUG/ULDK address failed, falling back to Nominatim:', e);
+            }
+
+            // 2) Fallback: Nominatim (Poland only)
+            if (results.length === 0) {
+                try {
+                    const nomUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=pl&limit=6&format=json&accept-language=pl`;
+                    const r = await fetch(nomUrl, { headers: { 'User-Agent': 'MobilnyAsystentGeodezyjny/1.0' }, signal: AbortSignal.timeout(8000) });
+                    const json = await r.json();
+                    results = json.map(item => ({
+                        label: item.display_name,
+                        lat: parseFloat(item.lat),
+                        lng: parseFloat(item.lon),
+                        source: 'OSM'
+                    }));
+                } catch (e) {
+                    setStatus('Błąd wyszukiwania', 'error');
+                }
+            }
+
+            hideSpinner();
+
+            if (results.length === 0) {
+                setStatus('Nie znaleziono adresu', 'ok');
+                srContainer.innerHTML = '<div class="sr-item"><span class="sr-label">Nie znaleziono wyników</span></div>';
+                srContainer.style.display = 'block';
+                return;
+            }
+
+            results.forEach(res => {
+                const el = document.createElement('div');
+                el.className = 'sr-item';
+                el.innerHTML = `<div class="sr-label">${res.label.split(',').slice(0, 2).join(', ')}</div>
+                    <div class="sr-sub">${res.label.split(',').slice(2).join(', ').trim()} · ${res.source}</div>`;
+                el.addEventListener('click', () => {
+                    map.setView([res.lat, res.lng], 17);
+                    if (searchMarker) map.removeLayer(searchMarker);
+                    searchMarker = L.marker([res.lat, res.lng]).addTo(map)
+                        .bindPopup(`<div class="pop-title"><i class="fa fa-location-dot"></i> Adres</div><div class="pop-val">${res.label.split(',').slice(0, 3).join(', ')}</div>`)
+                        .openPopup();
+                    srContainer.style.display = 'none';
+                    setStatus(`Znaleziono: ${res.label.split(',')[0]}`, 'ok');
+                    // Auto-close sidebar on mobile
+                    if (window.innerWidth <= 700) document.getElementById('sidebar').classList.remove('open');
+                });
+                srContainer.appendChild(el);
+            });
+
+            srContainer.style.display = 'block';
+            setStatus(`Znaleziono ${results.length} wynik(ów)`, 'ok');
+        }
+
+        document.getElementById('search-btn').addEventListener('click', () => doSearch(searchInput.value));
+        searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(searchInput.value); });
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#search-box') && !e.target.closest('#search-results')) {
+                srContainer.style.display = 'none';
+            }
+        });
+
+        // ════════════════════════════════════════════════
+        // GPS LOCALIZATION
+        // ════════════════════════════════════════════════
+        let gpsMarker = null;
+        let gpsCircle = null;
+
+        document.getElementById('btn-gps').addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                setStatus('GPS niedostępny w tej przeglądarce', 'error');
+                return;
+            }
+            setStatus('Lokalizowanie…', 'loading');
+            showSpinner('Pobieranie pozycji GPS…');
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    hideSpinner();
+                    const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+
+                    if (!PL_BOUNDS.contains([lat, lng])) {
+                        setStatus('Twoja pozycja jest poza Polską', 'error');
+                        return;
+                    }
+
+                    if (gpsMarker) map.removeLayer(gpsMarker);
+                    if (gpsCircle) map.removeLayer(gpsCircle);
+
+                    gpsCircle = L.circle([lat, lng], {
+                        radius: accuracy, color: '#2ea043', fillColor: '#2ea04320', fillOpacity: 0.4, weight: 1
+                    }).addTo(map);
+
+                    gpsMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: '',
+                            html: `<div style="width:14px;height:14px;border-radius:50%;background:#2ea043;border:3px solid #fff;box-shadow:0 0 10px #2ea04380"></div>`,
+                            iconSize: [14, 14], iconAnchor: [7, 7]
+                        })
+                    }).addTo(map)
+                        .bindPopup(`<div class="pop-title"><i class="fa fa-location-crosshairs"></i> Twoja lokalizacja</div>
+                    <div class="pop-val mono">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+                    <div class="pop-val" style="margin-top:4px;font-size:12px;color:var(--text-sec)">Dokładność: ±${Math.round(accuracy)} m</div>`)
+                        .openPopup();
+
+                    map.setView([lat, lng], 17);
+                    setStatus(`GPS · ±${Math.round(accuracy)} m`, 'ok');
+                },
+                err => {
+                    hideSpinner();
+                    const msgs = { 1: 'Odmówiono dostępu do GPS', 2: 'Pozycja niedostępna', 3: 'Przekroczono czas GPS' };
+                    setStatus(msgs[err.code] || 'Błąd GPS', 'error');
+                },
+                { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+            );
+        });
+
+        // ════════════════════════════════════════════════
+        // MOBILE SIDEBAR TOGGLE
+        // ════════════════════════════════════════════════
+        document.getElementById('sidebar-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Close sidebar when clicking map on mobile
+        map.on('click', () => {
+            if (window.innerWidth <= 700) {
+                // Don't close if we just got parcel info (handled in showParcelInfo)
+            }
+        });
+
+        // ════════════════════════════════════════════════
+        // INITIAL STATUS
+        // ════════════════════════════════════════════════
+        setStatus('Gotowy · dane z GUGiK i GDOŚ', 'ok');
+        console.log('🗾 Mobilny Asystent Geodezyjny · v1.0 · GUGiK / GDOŚ');
+    </script>
+</body>
+
+</html>
