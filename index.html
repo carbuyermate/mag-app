@@ -1437,60 +1437,63 @@
             setStatus('Pobieranie działki…', 'loading');
 
             try {
-                // Konwersja kliknięcia WGS84 na PUWG1992 (ponieważ srid=4326 w GUGiKu się zawiesza)
+                // Konwersja kliknięcia WGS84 na PUWG1992
                 const [x_2180, y_2180] = proj4("EPSG:4326", "EPSG:2180", [lng, lat]);
 
-                // Pobieranie danych z ULDK poprzez bezpośrednie zapytanie
-                const gdosUrl = `https://sdi.gdos.gov.pl/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo&BBOX=${lat - 0.0001},${lng - 0.0001},${lat + 0.0001},${lng + 0.0001}&CRS=EPSG:4326&WIDTH=10&HEIGHT=10&LAYERS=GDOS:ParkiNarodowe,GDOS:ParkiKrajobrazowe,GDOS:Rezerwaty,GDOS:ObszarySpecjalnejOchrony,GDOS:SpecjalneObszaryOchrony,GDOS:ObszaryChronionegoKrajobrazu,GDOS:PomnikiPrzyrody,GDOS:UzytkiEkologiczne,GDOS:StanowiskaDokumentacyjne,GDOS:ZespolyPrzyrodniczoKrajobrazowe&STYLES=&FORMAT=image/png&QUERY_LAYERS=GDOS:ParkiNarodowe,GDOS:ParkiKrajobrazowe,GDOS:Rezerwaty,GDOS:ObszarySpecjalnejOchrony,GDOS:SpecjalneObszaryOchrony,GDOS:ObszaryChronionegoKrajobrazu,GDOS:PomnikiPrzyrody,GDOS:UzytkiEkologiczne,GDOS:StanowiskaDokumentacyjne,GDOS:ZespolyPrzyrodniczoKrajobrazowe&INFO_FORMAT=application/json&I=5&J=5`;
-
-                // Fire both requests in parallel
-                const [respUldk, respGdos] = await Promise.all([
-                    fetch(uldkUrl, { signal: AbortSignal.timeout(5000) }),
-                    fetch(gdosUrl, { signal: AbortSignal.timeout(6000) }).catch(() => null)
-                ]);
-
+                // Najpierw pobierz z ULDK numer i pełną geometrię (WKT) działki
+                const uldkUrl = `https://uldk.gugik.gov.pl/?request=GetParcelByXY&xy=${x_2180},${y_2180}&result=parcel,region,teryt,geom_wkt`;
+                const respUldk = await fetch(uldkUrl, { signal: AbortSignal.timeout(5000) });
                 const textUldk = await respUldk.text();
                 const lines = textUldk.trim().split('\n');
                 
-                // Parse GDOŚ response if successful
                 let gdosAlertHTML = '';
-                if (respGdos && respGdos.ok) {
-                    try {
-                        const gdosData = await respGdos.json();
-                        if (gdosData.features && gdosData.features.length > 0) {
-                            // Collect unique layer names the point intersected with
-                            const zones = Array.from(new Set(gdosData.features.map(f => {
-                                // GDOŚ uses 'nazwa' property or fallback to layer id
-                                return f.properties?.nazwa || f.id.split('.')[0] || 'Strefa ochronna';
-                            })));
-                            
-                            gdosAlertHTML = `
-                                <div style="margin-top: 10px; padding: 8px; background: rgba(227, 179, 65, 0.15); border: 1px solid var(--warn); border-radius: 6px;">
-                                    <div style="color: var(--warn); font-size: 11px; font-weight: bold; margin-bottom: 4px;"><i class="fa fa-leaf"></i> Analiza Ograniczeń Środowiskowych</div>
-                                    <div style="font-size: 11px; color: #d1d5db; line-height: 1.4;">
-                                        Ostrzeżenie! Punkt koliduje ze strefami:<br>
-                                        <b style="color: #fff;">${zones.join('<br>• ')}</b>
-                                    </div>
-                                </div>`;
-                        } else {
-                            // No intersection
-                            gdosAlertHTML = `
-                                <div style="margin-top: 10px; padding: 8px; background: rgba(46, 160, 67, 0.1); border: 1px solid var(--accent); border-radius: 6px;">
-                                    <div style="color: var(--accent); font-size: 11px; font-weight: bold;"><i class="fa fa-check-circle"></i> Analiza Ograniczeń Środowiskowych</div>
-                                    <div style="font-size: 11px; color: #d1d5db; margin-top: 2px;">Brak kolizji z wielkopowierzchniowymi strefami chronionymi (Natura 2000, Parki itp.).</div>
-                                </div>`;
-                        }
-                    } catch (e) {
-                        console.warn("Błąd parsowania JSON z GDOŚ", e);
-                    }
-                }
-
-                // Response: code\nparcel|region|teryt
+                
+                // Response: code\nparcel|region|teryt|POLYGON(...)
                 if (lines[0] === '0' && lines[1]) {
                     const parts = lines[1].split('|');
                     const parcel = parts[0] || '—';
                     const region = parts[1] || '—';
                     const teryt = parts[2] || '—';
+                    const geomWkt = parts[3] ? parts.slice(3).join('|') : null; // everything after 3rd pipe is geometry
+
+                    // Jeśli dostaliśmy geometrię działki z ULDK, odpytujemy GDOŚ WFS o kolizję przestrzenną Poligon vs Poligon
+                    if (geomWkt && geomWkt.startsWith("POLYGON")) {
+                        try {
+                            const gdosLayers = 'GDOS:ParkiNarodowe,GDOS:ParkiKrajobrazowe,GDOS:Rezerwaty,GDOS:ObszarySpecjalnejOchrony,GDOS:SpecjalneObszaryOchrony,GDOS:ObszaryChronionegoKrajobrazu,GDOS:PomnikiPrzyrody,GDOS:UzytkiEkologiczne,GDOS:StanowiskaDokumentacyjne,GDOS:ZespolyPrzyrodniczoKrajobrazowe';
+                            // Filtr geometryczny: Czy warstwy GDOŚ przecinają się z geometrią pobranej działki?
+                            const cqlFilter = `INTERSECTS(geom, ${geomWkt})`;
+                            const gdosUrl = `https://sdi.gdos.gov.pl/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${gdosLayers}&CQL_FILTER=${encodeURIComponent(cqlFilter)}&OUTPUTFORMAT=application/json&SRSNAME=EPSG:2180`;
+                            
+                            const respGdos = await fetch(gdosUrl, { signal: AbortSignal.timeout(6000) }).catch(() => null);
+                            if (respGdos && respGdos.ok) {
+                                const gdosData = await respGdos.json();
+                                if (gdosData.features && gdosData.features.length > 0) {
+                                    const zones = Array.from(new Set(gdosData.features.map(f => {
+                                        // "nazwa" to atrybut GDOŚ, fallback to nazwa warstwy (id)
+                                        return f.properties?.nazwa || f.id.split('.')[0] || 'Strefa ochronna';
+                                    })));
+                                    
+                                    gdosAlertHTML = `
+                                        <div style="margin-top: 10px; padding: 8px; background: rgba(227, 179, 65, 0.15); border: 1px solid var(--warn); border-radius: 6px;">
+                                            <div style="color: var(--warn); font-size: 11px; font-weight: bold; margin-bottom: 4px;"><i class="fa fa-leaf"></i> Analiza Ograniczeń Środowiskowych</div>
+                                            <div style="font-size: 11px; color: #d1d5db; line-height: 1.4;">
+                                                <b>⚠️ Ostrzeżenie! Cała działka koliduje ze strefami:</b><br>
+                                                <b style="color: #fff;">${zones.join('<br>• ')}</b><br><br>
+                                                Ze względu na fragmentaryczność państwowych rejestrów, sprawdź również zapisy MPZP oraz strefy konserwatorskie dla innych ograniczeń zabudowy.
+                                            </div>
+                                        </div>`;
+                                } else {
+                                    gdosAlertHTML = `
+                                        <div style="margin-top: 10px; padding: 8px; background: rgba(46, 160, 67, 0.1); border: 1px solid var(--accent); border-radius: 6px;">
+                                            <div style="color: var(--accent); font-size: 11px; font-weight: bold;"><i class="fa fa-check-circle"></i> Analiza Ograniczeń Środowiskowych</div>
+                                            <div style="font-size: 11px; color: #d1d5db; margin-top: 2px;">Brak kolizji granic działki z wielkopowierzchniowymi strefami chronionymi (Natura 2000, Parki itp.).</div>
+                                        </div>`;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn("Błąd parsowania analizy WFS GDOŚ", e);
+                        }
+                    }
 
                     showParcelInfo(parcel, region, teryt, lat, lng, gdosAlertHTML);
                     setStatus(`Działka: ${parcel}`, 'ok');
@@ -1498,7 +1501,7 @@
                     clickMarker.bindPopup(buildPopup(parcel, region, teryt, gdosAlertHTML), { maxWidth: 280 }).openPopup();
                 } else {
                     setStatus('Brak działki w tym punkcie', 'ok');
-                    clickMarker.bindPopup('<div class="pop-title">Brak danych</div><p style="color:var(--text-sec);font-size:12px">W tym punkcie nie znaleziono działki ewidencyjnej.</p>' + gdosAlertHTML).openPopup();
+                    clickMarker.bindPopup('<div class="pop-title">Brak danych</div><p style="color:var(--text-sec);font-size:12px">W tym punkcie nie znaleziono działki ewidencyjnej.</p>').openPopup();
                     hideInfoPanel();
                 }
             } catch (err) {
