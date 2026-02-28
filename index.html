@@ -1538,18 +1538,40 @@
         // ASYNC ORCHESTRATOR FUNCTIONS
         // ════════════════════════════════════════════════
         async function checkGdosConstraints(geomWkt) {
-            if (!geomWkt || !geomWkt.startsWith("POLYGON")) return { status: 'brak' };
-            const gdosLayers = 'GDOS:ParkiNarodowe,GDOS:ParkiKrajobrazowe,GDOS:Rezerwaty,GDOS:ObszarySpecjalnejOchrony,GDOS:SpecjalneObszaryOchrony,GDOS:ObszaryChronionegoKrajobrazu,GDOS:PomnikiPrzyrody,GDOS:UzytkiEkologiczne,GDOS:StanowiskaDokumentacyjne,GDOS:ZespolyPrzyrodniczoKrajobrazowe';
-            const cqlFilter = `INTERSECTS(geom, ${geomWkt})`;
-            const gdosUrl = `https://sdi.gdos.gov.pl/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${gdosLayers}&CQL_FILTER=${encodeURIComponent(cqlFilter)}&OUTPUTFORMAT=application/json&SRSNAME=EPSG:2180`;
-            const resp = await fetch(gdosUrl, { signal: AbortSignal.timeout(6000) });
-            if (!resp.ok) throw new Error("GDOŚ error");
-            const data = await resp.json();
-            if (data.features && data.features.length > 0) {
-                const zones = Array.from(new Set(data.features.map(f => f.properties?.nazwa || f.id.split('.')[0] || 'Strefa ochronna')));
-                return { status: 'kolizja', zones };
+            const wkt = geomWkt ? geomWkt.replace(/^SRID=\d+;/, '') : null;
+            if (!wkt || (!wkt.startsWith("POLYGON") && !wkt.startsWith("MULTIPOLYGON"))) return { status: 'brak' };
+            
+            const gdosLayersStr = 'GDOS:ParkiNarodowe,GDOS:ParkiKrajobrazowe,GDOS:Rezerwaty,GDOS:ObszarySpecjalnejOchrony,GDOS:SpecjalneObszaryOchrony,GDOS:ObszaryChronionegoKrajobrazu,GDOS:PomnikiPrzyrody,GDOS:UzytkiEkologiczne,GDOS:StanowiskaDokumentacyjne,GDOS:ZespolyPrzyrodniczoKrajobrazowe';
+            const layers = gdosLayersStr.split(',');
+            const cqlFilter = `INTERSECTS(geom, ${wkt})`;
+
+            const checks = layers.map(layer => {
+                const url = `https://sdi.gdos.gov.pl/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=${layer}&CQL_FILTER=${encodeURIComponent(cqlFilter)}&OUTPUTFORMAT=application/json&SRSNAME=EPSG:2180`;
+                return fetch(url, { signal: AbortSignal.timeout(6000) }).then(r => {
+                    if (!r.ok) throw new Error("GDOŚ error");
+                    return r.json();
+                });
+            });
+
+            try {
+                const results = await Promise.all(checks);
+                let zones = [];
+                results.forEach(data => {
+                    if (data.features && data.features.length > 0) {
+                        data.features.forEach(f => {
+                            zones.push(f.properties?.nazwa || f.id.split('.')[0] || 'Strefa ochronna');
+                        });
+                    }
+                });
+                
+                if (zones.length > 0) {
+                    return { status: 'kolizja', zones: [...new Set(zones)] };
+                }
+                return { status: 'brak' };
+            } catch (err) {
+                console.error("GDOŚ check error:", err);
+                throw new Error("GDOŚ error");
             }
-            return { status: 'brak' };
         }
 
         function getReportHTML(dataUldk, gdosResult) {
