@@ -1484,10 +1484,9 @@
                     };
 
                     let gdosResult = 'loading';
-                    let kiutResult = 'loading';
 
                     const updateUI = () => {
-                        const html = getReportHTML(dataUldk, gdosResult, kiutResult);
+                        const html = getReportHTML(dataUldk, gdosResult);
                         const panel = document.getElementById('info-panel');
                         panel.innerHTML = `
                             <div class="info-title">
@@ -1514,16 +1513,11 @@
                     updateUI(); // renders initial "ładowanie..." statuses
                     setStatus(`Działka: ${dataUldk.parcel}`, 'ok');
 
-                    // KROK 2 & 3: Równoległe GDOŚ + KIUT
-                    const bboxSize = 2; // meters
-                    const bbox2180 = `${x_2180 - bboxSize},${y_2180 - bboxSize},${x_2180 + bboxSize},${y_2180 + bboxSize}`;
-
+                    // KROK 2: GDOŚ WFS (P-to-P)
                     Promise.allSettled([
-                        checkGdosConstraints(dataUldk.geomWkt),
-                        checkUtilities(bbox2180)
+                        checkGdosConstraints(dataUldk.geomWkt)
                     ]).then(results => {
                         gdosResult = results[0].status === 'fulfilled' ? results[0].value : { error: true };
-                        kiutResult = results[1].status === 'fulfilled' ? results[1].value : { error: true };
                         updateUI(); // refreshes UI with final data
                     });
 
@@ -1558,32 +1552,11 @@
             return { status: 'brak' };
         }
 
-        async function checkUtilities(bbox2180) {
-            const layers = 'przewod_wodociagowy,przewod_kanalizacyjny,przewod_gazowy,przewod_elektroenergetyczny,przewod_telekomunikacyjny';
-            const url = `https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&BBOX=${bbox2180}&CRS=EPSG:2180&WIDTH=10&HEIGHT=10&LAYERS=${layers}&QUERY_LAYERS=${layers}&INFO_FORMAT=text/html&X=5&Y=5`;
-            const resp = await fetch(url, { signal: AbortSignal.timeout(4000) });
-            if (!resp.ok) throw new Error("KIUT error");
-            const text = await resp.text();
-            return {
-                woda: /wodoci[aą]gow/i.test(text),
-                kanal: /kanalizacyjn/i.test(text),
-                gaz: /gazow/i.test(text),
-                prad: /elektroenergetyczn/i.test(text),
-                tele: /telekomunikacyjn/i.test(text)
-            };
-        }
-
-        function getReportHTML(dataUldk, gdosResult, kiutResult) {
+        function getReportHTML(dataUldk, gdosResult) {
             const gdosHtml = gdosResult === 'loading' ? '<span class="loading-text">Ładowanie...</span>' :
                              gdosResult?.status === 'kolizja' ? `<b style="color:var(--warn)">⚠️ Kolizja:</b> <span style="color:#fff">${gdosResult.zones.join(', ')}</span>` :
                              gdosResult?.status === 'brak' ? `<span class="status-ok">✔ Brak punktów zapalnych (10 warstw GDOŚ)</span>` : 
                              `<span class="status-err">❌ Błąd serwera GDOŚ (Timeout)</span>`;
-                             
-            const getKiutRow = (key, name, icon) => {
-                if (kiutResult === 'loading') return `<li>${icon} ${name}: <span class="loading-text">Ładowanie...</span></li>`;
-                if (!kiutResult || kiutResult.error) return `<li>${icon} ${name}: <span class="status-err">Brak odp. ze Starostwa</span></li>`;
-                return `<li>${icon} ${name}: ${kiutResult[key] ? '<span class="status-ok">✔ W BBOX (WMS)</span>' : '<span class="status-no">Może brakować na mapach</span>'}</li>`;
-            };
 
             return `
 <div class="mag-raport-container">
@@ -1593,21 +1566,11 @@
         <div style="font-size:11px;color:var(--text-sec)" class="mono">TERYT: ${dataUldk.teryt}</div>
     </div>
     <div class="raport-section">
-        <h5>🔌 Uzbrojenie Terenu (WMS KIUT)</h5>
-        <ul class="media-list">
-            ${getKiutRow('prad', 'Prąd', '⚡')}
-            ${getKiutRow('woda', 'Woda', '💧')}
-            ${getKiutRow('gaz', 'Gaz', '🔥')}
-            ${getKiutRow('kanal', 'Kanalizacja', '💩')}
-            ${getKiutRow('tele', 'Telekomunikacja', '📡')}
-        </ul>
-    </div>
-    <div class="raport-section">
         <h5>🌿 Ograniczenia Środowiskowe (P-to-P)</h5>
         <div class="gdos-status" style="font-size:11px">${gdosHtml}</div>
     </div>
     <div class="raport-disclaimer" style="font-size: 10px; color: var(--text-sec); margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; line-height: 1.3;">
-        ⚠️ <strong>Ostrzeżenie powiązane z fizyką:</strong> System bada wybrane strefy GDOŚ metodą analityki wektorowej. Wyniki nie odzwierciedlają stref konserwatorskich zabytków ani zapisów Miejscowego Planu Zagospodarowania Przestrzennego (MPZP), które blokują WZ na etapie urzędniczym. KIUT ukazuje wyłącznie przyłącza cyfrowo wektoryzowane przez lokalne PODGiK, więc szukaj śladów rewizji fizycznie w gruncie z wykrywaczem! Przepraszamy za braki w rejestrach państwowych.
+        ⚠️ <strong>Ostrzeżenie powiązane z fizyką:</strong> System bada wybrane strefy GDOŚ metodą analityki wektorowej. Wyniki nie odzwierciedlają stref konserwatorskich zabytków ani zapisów Miejscowego Planu Zagospodarowania Przestrzennego (MPZP), które blokują WZ na etapie urzędniczym. Szukaj śladów rewizji fizycznie w gruncie z wykrywaczem! Przepraszamy za braki w rejestrach państwowych.
     </div>
 </div>`;
         }
