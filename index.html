@@ -1209,6 +1209,14 @@
                             <label class="toggle"><input type="checkbox" id="ovr-budynki"><span
                                     class="toggle-slider"></span></label>
                         </div>
+                        <div class="ovr-item">
+                            <div class="ovr-item-left">
+                                <div class="ovr-dot" style="background:#eab308"></div>
+                                <span class="ovr-name">Pozwolenia na budowę (GUNB)</span>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="ovr-gunb"><span
+                                    class="toggle-slider"></span></label>
+                        </div>
                     </div>
                 </div>
 
@@ -1478,6 +1486,16 @@
                     </div>
                 </div>
 
+                <!-- Sekcja: Inwestycje w okolicy (GUNB) -->
+                <div class="pp-section">
+                    <div class="pp-sec-header"><i class="fa fa-hard-hat"></i> Wnioski i Pozwolenia (GUNB)</div>
+                    <div class="pp-sec-content">
+                        <div id="pp-gunb-content">
+                            <span class="loading-text">Weryfikacja bazy RWDZ...</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Sekcja 3: Sprawy urzędowe -->
                 <div class="pp-section">
                     <div class="pp-sec-header"><i class="fa fa-building-columns"></i> 3. Sprawy urzędowe</div>
@@ -1614,6 +1632,7 @@
         const KIEG = 'https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaEwidencjiGruntow';
         const KIUT = 'https://integracja.gugik.gov.pl/cgi-bin/KrajowaIntegracjaUzbrojeniaTerenu';
         const GDOS = 'https://sdi.gdos.gov.pl/wms';
+        const GUNB = 'https://wms.gunb.gov.pl/geoserver/wms';
 
         // Use dpi:120 or 150 to tell the WMS server to render fatter lines/fonts
         const WMS_COMMON = {
@@ -1635,11 +1654,15 @@
         function makeGDOS(layers, opacity = 0.65) {
             return L.tileLayer.wms(GDOS, { ...WMS_COMMON, layers, opacity, styles: '', attribution: '© GDOŚ' });
         }
+        function makeGUNB(layers, opacity = 0.8) {
+            return L.tileLayer.wms(GUNB, { ...WMS_COMMON, layers, opacity, styles: '', attribution: '© GUNB' });
+        }
 
         const overlayDefs = {
             'ovr-dzialki': { fn: () => makeKIEG('dzialki'), label: 'Granice działek' },
             'ovr-numery': { fn: () => makeKIEG('numery_dzialek'), label: 'Numery działek' },
             'ovr-budynki': { fn: () => makeKIEG('budynki'), label: 'Budynki' },
+            'ovr-gunb': { fn: () => makeGUNB('budowle,obiekty_liniowe'), label: 'Pozwolenia (GUNB)' },
             'kiut-woda': { fn: () => makeKIUT('przewod_wodociagowy'), label: 'Woda' },
             'kiut-kanal': { fn: () => makeKIUT('przewod_kanalizacyjny'), label: 'Kanalizacja' },
             'kiut-gaz': { fn: () => makeKIUT('przewod_gazowy'), label: 'Gaz' },
@@ -1748,6 +1771,23 @@
         // ════════════════════════════════════════════════
         // ULDK – CLICK TO IDENTIFY PARCEL
         // ════════════════════════════════════════════════
+        async function fetchGunbData(terytId) {
+            const proxy = "https://corsproxy.io/?";
+            // API GUNB wymaga usunięcia fragmentu np. .AR_1. i zostawienia 146501_1.0001.123
+            const formattedTeryt = terytId.replace(/\.AR_\d+/i, '');
+            const url = `${proxy}https://wyszukiwarka.gunb.gov.pl/api/projects/?parcel_number=${encodeURIComponent(formattedTeryt)}`;
+
+            try {
+                const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+                if (!response.ok) return { error: true };
+                const data = await response.json();
+                return { status: 'success', results: data.results || [] };
+            } catch (error) {
+                console.warn("Błąd pobierania danych z rwdz (GUNB):", error);
+                return { error: true };
+            }
+        }
+
         let clickMarker = null;
 
         map.on('click', async e => {
@@ -1787,6 +1827,7 @@
                     };
 
                     let gdosResult = 'loading';
+                    let gunbResult = 'loading';
 
                     const updateUI = () => {
                         document.getElementById('pp-parcel-no').textContent = dataUldk.parcel;
@@ -1812,6 +1853,34 @@
                             gdosEl.innerHTML = `<div style="color:var(--danger)"><i class="fa fa-circle-xmark"></i> Błąd serwera GDOŚ. (Timeout)</div>`;
                         }
 
+                        const gunbEl = document.getElementById('pp-gunb-content');
+                        if (gunbResult === 'loading') {
+                            gunbEl.innerHTML = '<span class="loading-text"><i class="fa fa-spinner spin"></i> Pobieranie danych z rejestru RWDZ...</span>';
+                        } else if (gunbResult?.error) {
+                            gunbEl.innerHTML = `<div style="color:var(--danger)"><i class="fa fa-circle-xmark"></i> Błąd serwera RWDZ (Timeout/CORS).</div>`;
+                        } else if (gunbResult?.results?.length > 0) {
+                            let listHtml = '';
+                            gunbResult.results.forEach(res => {
+                                const dataData = Array.isArray(res.date) ? res.date[0] : (res.date || 'brak daty');
+                                let inwestor = 'Osoba fizyczna (dane ukryte)';
+                                if (res.investor && res.investor.trim() !== '' && res.investor !== '***') {
+                                    inwestor = res.investor;
+                                }
+                                listHtml += `<div class="pp-box" style="margin-top:10px;">
+                                    <div style="font-weight:bold; color:#fff; font-size:13px; margin-bottom:4px;">${res.intent_type || 'Zamierzenie budowlane'}</div>
+                                    <div style="font-size:11px; margin-bottom:2px;"><strong style="color:var(--text-sec)">Status:</strong> <span style="color:#d1d5db">${res.decision_status || res.application_status || 'W trakcie rozpatrywania'}</span></div>
+                                    <div style="font-size:11px; margin-bottom:2px;"><strong style="color:var(--text-sec)">Wniosek/Decyzja:</strong> <span style="color:#d1d5db">${res.application_number || res.decision_number || 'Brak'}</span></div>
+                                    <div style="font-size:11px; margin-bottom:2px;"><strong style="color:var(--text-sec)">Inwestor:</strong> <span style="color:#d1d5db">${inwestor}</span></div>
+                                    <div style="font-size:11px;"><strong style="color:var(--text-sec)">Data wpływu:</strong> <span style="color:#d1d5db">${dataData}</span></div>
+                                </div>`;
+                            });
+                            gunbEl.innerHTML = listHtml;
+                        } else {
+                            gunbEl.innerHTML = `<div style="padding: 10px; border-left: 3px solid var(--accent); background: rgba(46, 160, 67, 0.1); border-radius: 4px; color:#fff;">
+                                <i class="fa fa-circle-check" style="color:var(--accent)"></i> Brak zarejestrowanych wniosków w systemie RWDZ dla tej działki (dane od 2016 r.).
+                            </div>`;
+                        }
+
                         document.getElementById('parcel-panel').classList.add('open');
                         
                         // Opcjonalnie usuń stary dymek, by nie zasłaniał mapy (nowe funkcje w panelu okna)
@@ -1824,11 +1893,13 @@
                     updateUI(); // renders initial "ładowanie..." statuses
                     setStatus(`Działka: ${dataUldk.parcel}`, 'ok');
 
-                    // KROK 2: GDOŚ WFS (P-to-P)
+                    // KROK 2: Analityka przestrzenna GDOŚ i Rejestry GUNB rwdz
                     Promise.allSettled([
-                        checkGdosConstraints(dataUldk.geomWkt)
+                        checkGdosConstraints(dataUldk.geomWkt),
+                        fetchGunbData(dataUldk.teryt)
                     ]).then(results => {
                         gdosResult = results[0].status === 'fulfilled' ? results[0].value : { error: true };
+                        gunbResult = results[1].status === 'fulfilled' ? results[1].value : { error: true };
                         updateUI(); // refreshes UI with final data
                     });
 
