@@ -960,14 +960,14 @@
             padding: 16px;
             font-size: 13px;
             line-height: 1.5;
-            color: var(--text-sec);
+            color: #d1d5db; /* brighter than text-sec for readability */
         }
 
         .pp-row {
             display: flex;
             justify-content: space-between;
             padding: 6px 0;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
         }
 
         .pp-row:last-child {
@@ -976,12 +976,12 @@
         }
 
         .pp-label {
-            color: var(--text-muted);
+            color: #9ca3af; /* brightened from text-muted */
             font-weight: 500;
         }
 
         .pp-val {
-            color: var(--text-primary);
+            color: #ffffff; /* pure white instead of text-primary */
             font-weight: 600;
             text-align: right;
         }
@@ -1013,7 +1013,7 @@
 
         .pp-highlight-box p {
             font-size: 11px;
-            color: var(--text-muted);
+            color: #9ca3af; /* brightened string */
             margin: 0;
         }
 
@@ -1472,7 +1472,7 @@
                         <div id="pp-gdos-content">
                             <span class="loading-text">Sprawdzanie rejestrów...</span>
                         </div>
-                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; line-height: 1.3;">
+                        <div style="font-size: 10px; color: #9ca3af; margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; line-height: 1.3;">
                             ⚠️ Dane z GDOŚ (analityka wektorowa). Nie odzwierciedlają stref konserwatorskich zabytków ani zapisów Miejscowego Planu Zagospodarowania Przestrzennego (MPZP), które blokują WZ na etapie urzędniczym. Szukaj śladów rewizji fizycznie w gruncie z wykrywaczem! Przepraszamy za braki w rejestrach państwowych.
                         </div>
                     </div>
@@ -1484,15 +1484,15 @@
                     <div class="pp-sec-content">
                         <div style="color:#fff; font-weight:600; margin-bottom:5px;">Jednostka właściwa ewidencji:</div>
                         <div class="pp-box">
-                            <i class="fa fa-landmark" style="color:var(--text-muted)"></i> <span id="pp-urzad-nazwa" style="color:#fff">---</span><br>
-                            <div style="font-size:11px; margin-top:4px; margin-bottom:10px;"><i class="fa fa-location-dot"></i> <span id="pp-urzad-adres">Wydział Geodezji i Kartografii</span></div>
+                            <i class="fa fa-landmark" style="color:#9ca3af"></i> <span id="pp-urzad-nazwa" style="color:#ffffff">---</span><br>
+                            <div style="font-size:11px; margin-top:4px; margin-bottom:10px; color:#d1d5db;"><i class="fa fa-location-dot"></i> <span id="pp-urzad-adres">Wydział Geodezji i Kartografii</span></div>
                             <a href="#" id="pp-urzad-link" target="_blank" class="pp-cta secondary" style="font-size:11px; padding:6px 10px; margin-top:5px;"><i class="fa fa-map-location-dot"></i> Sprawdź kontakt i dojazd</a>
                         </div>
 
-                        <div style="color:#fff; font-weight:600; margin-top:15px; margin-bottom:5px;">Księgi Wieczyste:</div>
+                        <div style="color:#ffffff; font-weight:600; margin-top:15px; margin-bottom:5px;">Księgi Wieczyste:</div>
                         <div class="pp-box">
-                            <i class="fa fa-scale-balanced" style="color:var(--text-muted)"></i> <span id="pp-sad-nazwa" style="color:#fff">---</span><br>
-                            <div style="font-size:11px; margin-top:4px; margin-bottom:10px;"><i class="fa fa-location-dot"></i> Wydział Ksiąg Wieczystych</div>
+                            <i class="fa fa-scale-balanced" style="color:#9ca3af"></i> <span id="pp-sad-nazwa" style="color:#ffffff">---</span><br>
+                            <div style="font-size:11px; margin-top:4px; margin-bottom:10px; color:#d1d5db;"><i class="fa fa-location-dot"></i> Wydział Ksiąg Wieczystych</div>
                             <a href="#" id="pp-sad-link" target="_blank" class="pp-cta secondary" style="font-size:11px; padding:6px 10px; margin-top:5px;"><i class="fa fa-map-location-dot"></i> Sprawdź kontakt i dojazd</a>
                             
                             <div class="pp-highlight-box">
