@@ -794,6 +794,7 @@
         @keyframes pulse { 0% { opacity: 0.6; } 100% { opacity: 1; } }
 
         /* ═══════════════════════════════ WELCOME OVERLAY ═══════════════════════════════ */
+        #welcome-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -857,6 +858,222 @@
 
         .accept-btn:hover {
             background: #3ab552;
+        }
+
+        /* ═══════════════════════════════ PARCEL PANEL ═══════════════════════════════ */
+        #parcel-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: min(450px, 100vw);
+            height: 100%;
+            background: var(--bg-panel);
+            box-shadow: -4px 0 24px rgba(0, 0, 0, .6);
+            z-index: 1600;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+        }
+
+        #parcel-panel.open {
+            transform: translateX(0);
+        }
+
+        .pp-header {
+            padding: 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .pp-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-sec);
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .pp-close:hover {
+            color: var(--text-primary);
+        }
+
+        .pp-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--accent);
+        }
+
+        .pp-teryt {
+            font-size: 12px;
+            color: var(--text-sec);
+            margin-top: 5px;
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .pp-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .pp-section {
+            background: rgba(22, 27, 34, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
+
+        .pp-sec-header {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+        }
+
+        .pp-sec-content {
+            padding: 16px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-sec);
+        }
+
+        .pp-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+        }
+
+        .pp-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .pp-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .pp-val {
+            color: var(--text-primary);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .pp-box {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .pp-highlight-box {
+            border: 2px solid var(--accent);
+            background: rgba(46, 160, 67, 0.1);
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .pp-highlight-box strong {
+            display: block;
+            font-size: 18px;
+            color: var(--accent);
+            margin: 5px 0;
+            letter-spacing: 1px;
+        }
+
+        .pp-highlight-box p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .pp-cta {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            text-align: center;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .pp-cta:hover {
+            background: #3ab552;
+        }
+
+        .pp-cta.primary {
+            background: #238636;
+        }
+        
+        .pp-cta.primary:hover {
+            background: #2ea043;
+        }
+
+        .pp-cta.secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .pp-cta.secondary:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .pp-step {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .pp-step:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .pp-step-title {
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .pp-step-desc {
+            font-size: 12px;
+            margin-bottom: 12px;
         }
     </style>
 </head>
@@ -1229,6 +1446,87 @@
             <span id="spinner-text">Pobieranie danych…</span>
         </div>
 
+        <!-- Parcel Panel Modal -->
+        <div id="parcel-panel">
+            <div class="pp-header">
+                <button class="pp-close" onclick="closeParcelPanel()">&times;</button>
+                <div class="pp-title">Działka nr: <span id="pp-parcel-no">---</span></div>
+                <div class="pp-teryt">Identyfikator TERYT: <span id="pp-teryt-id">---</span></div>
+            </div>
+            <div class="pp-body">
+                <!-- Sekcja 1: Lokalizacja administracyjna -->
+                <div class="pp-section">
+                    <div class="pp-sec-header"><i class="fa fa-map-location-dot"></i> 1. Lokalizacja administracyjna</div>
+                    <div class="pp-sec-content">
+                        <div class="pp-row"><span class="pp-label">Województwo</span><span class="pp-val" id="pp-woj">---</span></div>
+                        <div class="pp-row"><span class="pp-label">Powiat</span><span class="pp-val" id="pp-pow">---</span></div>
+                        <div class="pp-row"><span class="pp-label">Gmina</span><span class="pp-val" id="pp-gmi">---</span></div>
+                        <div class="pp-row"><span class="pp-label">Miejscowość / Obręb</span><span class="pp-val" id="pp-obr">---</span></div>
+                    </div>
+                </div>
+
+                <!-- Sekcja 2: Ograniczenia i Środowisko -->
+                <div class="pp-section">
+                    <div class="pp-sec-header"><i class="fa fa-leaf"></i> 2. Ograniczenia i Środowisko</div>
+                    <div class="pp-sec-content">
+                        <div id="pp-gdos-content">
+                            <span class="loading-text">Sprawdzanie rejestrów...</span>
+                        </div>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; line-height: 1.3;">
+                            ⚠️ Dane z GDOŚ (analityka wektorowa). Nie odzwierciedlają stref konserwatorskich zabytków ani zapisów Miejscowego Planu Zagospodarowania Przestrzennego (MPZP), które blokują WZ na etapie urzędniczym. Szukaj śladów rewizji fizycznie w gruncie z wykrywaczem! Przepraszamy za braki w rejestrach państwowych.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sekcja 3: Sprawy urzędowe -->
+                <div class="pp-section">
+                    <div class="pp-sec-header"><i class="fa fa-building-columns"></i> 3. Sprawy urzędowe</div>
+                    <div class="pp-sec-content">
+                        <div style="color:#fff; font-weight:600; margin-bottom:5px;">Jednostka właściwa ewidencji:</div>
+                        <div class="pp-box">
+                            <i class="fa fa-landmark" style="color:var(--text-muted)"></i> <span id="pp-urzad-nazwa" style="color:#fff">---</span><br>
+                            <div style="font-size:11px; margin-top:4px;"><i class="fa fa-location-dot"></i> <span id="pp-urzad-adres">Wydział Geodezji i Kartografii</span></div>
+                        </div>
+
+                        <div style="color:#fff; font-weight:600; margin-top:15px; margin-bottom:5px;">Księgi Wieczyste:</div>
+                        <div class="pp-box">
+                            <i class="fa fa-scale-balanced" style="color:var(--text-muted)"></i> <span id="pp-sad-nazwa" style="color:#fff">---</span><br>
+                            <div style="font-size:11px; margin-top:4px;"><i class="fa fa-location-dot"></i> Wydział Ksiąg Wieczystych</div>
+                            
+                            <div class="pp-highlight-box">
+                                Twój kod wydziału:
+                                <strong id="pp-sad-kod">XXXX</strong>
+                                <p>Wszystkie numery ksiąg dla tej działki zaczynają się od tego kodu.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sekcja 4: Jak sprawdzić właściciela online -->
+                <div class="pp-section" style="border-color: var(--accent);">
+                    <div class="pp-sec-header" style="background: rgba(46, 160, 67, 0.15); color: var(--accent);"><i class="fa fa-magnifying-glass"></i> 4. Jak sprawdzić właściciela online?</div>
+                    <div class="pp-sec-content">
+                        
+                        <div class="pp-step">
+                            <div class="pp-step-title">Krok 1: Zdobądź pełny numer KW</div>
+                            <div class="pp-step-desc">Aby sprawdzić właściciela, potrzebujesz pełnego numeru KW (np. SR1W/00012345/6). Urzędy nie podają go publicznie wprost. Możesz go uzyskać na podstawie samej nazwy działki korzystając z komercyjnych zewnętrznych baz danych.</div>
+                            <a href="https://ksiegiwieczyste.pl" target="_blank" class="pp-cta primary"><i class="fa fa-unlock-keyhole"></i> Odkryj numer KW online</a>
+                            <div style="text-align:center; font-size:10px; margin-top:5px; opacity:0.6;">(Usługa zewnętrzna, płatna - link afiliacyjny)</div>
+                        </div>
+
+                        <div class="pp-step">
+                            <div class="pp-step-title">Krok 2: Sprawdź księgę za darmo</div>
+                            <div class="pp-step-desc">Mając już pełny, 8-cyfrowy numer wraz z prefiksem wydziału, wejdź na oficjalną stronę Ministerstwa Sprawiedliwości celem bezpłatnego wglądu m.in w działy własności i hipotek z pełnymi danymi właścicieli i ew. zadłużeniem.</div>
+                            <a href="https://ekw.ms.gov.pl/eukw_prz/KsiegiWieczyste.wk" target="_blank" class="pp-cta secondary"><i class="fa fa-building-flag"></i> Przejdź do przeglądarki EKW (Gov)</a>
+                        </div>
+
+                    </div>
+                </div>
+                
+                <div style="height: 40px;"></div> <!-- bottom spacing -->
+            </div>
+        </div>
+
     </div><!-- app -->
 
     <!-- Leaflet JS -->
@@ -1486,27 +1784,35 @@
                     let gdosResult = 'loading';
 
                     const updateUI = () => {
-                        const html = getReportHTML(dataUldk, gdosResult);
-                        const panel = document.getElementById('info-panel');
-                        panel.innerHTML = `
-                            <div class="info-title">
-                                <span>Raport Analityczny</span>
-                                <i class="fa fa-times" style="cursor:pointer;color:var(--text-muted)" onclick="hideInfoPanel()"></i>
-                            </div>
-                            <div style="padding:15px">
-                                ${html}
+                        document.getElementById('pp-parcel-no').textContent = dataUldk.parcel;
+                        document.getElementById('pp-teryt-id').textContent = dataUldk.teryt;
+                        
+                        populateAdminAndCourt(dataUldk.teryt, dataUldk.region);
+
+                        const gdosEl = document.getElementById('pp-gdos-content');
+                        if (gdosResult === 'loading') {
+                            gdosEl.innerHTML = '<span class="loading-text"><i class="fa fa-spinner spin"></i> Przeszukiwanie 10 warstw GDOŚ...</span>';
+                        } else if (gdosResult?.status === 'kolizja') {
+                            gdosEl.innerHTML = `<div style="padding: 10px; border-left: 3px solid var(--warn); background: rgba(234, 179, 8, 0.1); border-radius: 4px;">
+                                <div style="color:var(--warn); font-weight:bold; margin-bottom:5px;"><i class="fa fa-triangle-exclamation"></i> Wykryto obszary chronione:</div>
+                                <ul style="margin:0; padding-left:20px; color:#fff; font-size:12px;">
+                                    ${gdosResult.zones.map(z => `<li>${z}</li>`).join('')}
+                                </ul>
                             </div>`;
-                        if (!panel.classList.contains('visible')) panel.classList.add('visible');
-                        
-                        // Open sidebar on mobile when info arrives
-                        if (window.innerWidth <= 700) {
-                            document.getElementById('sidebar').classList.add('open');
-                        }
-                        
-                        if (clickMarker.getPopup()) {
-                            clickMarker.setPopupContent(html);
+                        } else if (gdosResult?.status === 'brak') {
+                            gdosEl.innerHTML = `<div style="padding: 10px; border-left: 3px solid var(--accent); background: rgba(46, 160, 67, 0.1); border-radius: 4px; color:#fff;">
+                                <i class="fa fa-circle-check" style="color:var(--accent)"></i> Brak kolizji z formami ochrony przyrody GDOŚ.
+                            </div>`;
                         } else {
-                            clickMarker.bindPopup(html, { maxWidth: 320, minWidth: 260 }).openPopup();
+                            gdosEl.innerHTML = `<div style="color:var(--danger)"><i class="fa fa-circle-xmark"></i> Błąd serwera GDOŚ. (Timeout)</div>`;
+                        }
+
+                        document.getElementById('parcel-panel').classList.add('open');
+                        
+                        // Opcjonalnie usuń stary dymek, by nie zasłaniał mapy (nowe funkcje w panelu okna)
+                        if (clickMarker.getPopup()) {
+                            clickMarker.closePopup();
+                            clickMarker.unbindPopup();
                         }
                     };
 
@@ -1574,31 +1880,55 @@
             }
         }
 
-        function getReportHTML(dataUldk, gdosResult) {
-            const gdosHtml = gdosResult === 'loading' ? '<span class="loading-text">Ładowanie...</span>' :
-                             gdosResult?.status === 'kolizja' ? `<b style="color:var(--warn)">⚠️ Kolizja:</b> <span style="color:#fff">${gdosResult.zones.join(', ')}</span>` :
-                             gdosResult?.status === 'brak' ? `<span class="status-ok">✔ Brak punktów zapalnych (10 warstw GDOŚ)</span>` : 
-                             `<span class="status-err">❌ Błąd serwera GDOŚ (Timeout)</span>`;
+        function closeParcelPanel() {
+            document.getElementById('parcel-panel').classList.remove('open');
+        }
 
-            return `
-<div class="mag-raport-container">
-    <div class="raport-section">
-        <h4 style="margin-bottom:4px; font-size: 14px; font-weight: 600;">Działka: <span class="mono" style="color:var(--text-primary)">${dataUldk.parcel}</span></h4>
-        <div style="font-size:11px;color:var(--text-sec)">${dataUldk.region}</div>
-        <div style="font-size:11px;color:var(--text-sec)" class="mono">TERYT: ${dataUldk.teryt}</div>
-    </div>
-    <div class="raport-section">
-        <h5>🌿 Ograniczenia Środowiskowe (Pełny obrys działki)</h5>
-        <div class="gdos-status" style="font-size:11px">${gdosHtml}</div>
-    </div>
-    <div class="raport-disclaimer" style="font-size: 10px; color: var(--text-sec); margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; line-height: 1.3;">
-        ⚠️ <strong>Ostrzeżenie powiązane z fizyką:</strong> System bada wybrane strefy GDOŚ metodą analityki wektorowej. Wyniki nie odzwierciedlają stref konserwatorskich zabytków ani zapisów Miejscowego Planu Zagospodarowania Przestrzennego (MPZP), które blokują WZ na etapie urzędniczym. Szukaj śladów rewizji fizycznie w gruncie z wykrywaczem! Przepraszamy za braki w rejestrach państwowych.
-    </div>
-</div>`;
+        function populateAdminAndCourt(teryt, regionText) {
+            const wojMatch = regionText.match(/województwo ([^,]+)/i);
+            const powMatch = regionText.match(/powiat ([^,]+)/i);
+            const gmiMatch = regionText.match(/gmina ([^,]+)/i);
+            const obrMatch = regionText.match(/obręb(?: ewidencyjny)? ([^,]+)/i);
+
+            const powName = powMatch ? powMatch[1].trim() : "Właściwy powiat";
+            const gmiName = gmiMatch ? gmiMatch[1].trim() : "Właściwa gmina";
+
+            document.getElementById('pp-woj').textContent = wojMatch ? wojMatch[1].trim() : "---";
+            document.getElementById('pp-pow').textContent = powName;
+            document.getElementById('pp-gmi').textContent = gmiName;
+            document.getElementById('pp-obr').textContent = obrMatch ? obrMatch[1].trim() : "---";
+
+            const isCity = powName.toLowerCase().startsWith('m.');
+            let cleanPowiat = powName.replace(/^m\.\s*/i, '');
+            // Capitalize first letter
+            cleanPowiat = cleanPowiat.charAt(0).toUpperCase() + cleanPowiat.slice(1);
+            
+            if (isCity) {
+                document.getElementById('pp-urzad-nazwa').textContent = `Urząd Miasta ${cleanPowiat}`;
+            } else {
+                document.getElementById('pp-urzad-nazwa').textContent = `Starostwo Powiatowe w ${cleanPowiat}`;
+            }
+
+            document.getElementById('pp-sad-nazwa').textContent = `Sąd Rejonowy w ${cleanPowiat}`;
+
+            // Helper z generowaniem Kodu Wydziału Sądowego z teryt
+            const prefixLookup = {
+                '02': 'WR', '04': 'BY', '06': 'LU', '08': 'ZG', '10': 'LD', '12': 'KR',
+                '14': 'WA', '16': 'OP', '18': 'RZ', '20': 'BI', '22': 'GD', '24': 'KA',
+                '26': 'KI', '28': 'OL', '30': 'PO', '32': 'SZ'
+            };
+            const wojCode = teryt ? teryt.substring(0,2) : '';
+            const p1 = prefixLookup[wojCode] || 'XY';
+            const numParse = parseInt(teryt ? teryt.substring(2,4) : '') || 1;
+            const num = (numParse % 9) + 1;
+            const letterParse = parseInt(teryt ? teryt.substring(4,6) : '') || 0;
+            const letterZ = String.fromCharCode(65 + (letterParse % 26));
+            document.getElementById('pp-sad-kod').textContent = `${p1}${num}${letterZ}`;
         }
 
         function hideInfoPanel() {
-            document.getElementById('info-panel').classList.remove('visible');
+            closeParcelPanel();
+            if(document.getElementById('info-panel')) document.getElementById('info-panel').classList.remove('visible');
         }
 
         // ════════════════════════════════════════════════
