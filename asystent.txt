@@ -37,7 +37,7 @@ Praca z oficjalnymi portalem Geoportal.gov.pl na urządzeniach mobilnych jest wy
 - ** Optymalizacja czytelności wektorów (DPI Hack):** Wymuszenie na serwerach rządowych renderingu z High-DPI (150dpi) oraz nad-próbkowanie obrazu kafelków WMS (tileSize: 512, zoomOffset: -1) celem pogrubienia mikroskopijnych, 1-pikselowych linii ewidencyjnych i infrastrukturalnych, poprawiając drastycznie czytelność pod słońcem na ekranie roboczym.
 
 ## 6. Architektura i Źródła Danych (API & Bazy)
-Aplikacja to hybryda (Node.js/Express + Frontend). Moduł mapowy to otwartoźródłowy **Leaflet.js (v1.9.4)**. Translacja układów współrzędnych realizowana przez bibliotekę matematyczną **Proj4js**. Większość zapytań (ULDK, GDOŚ, NMT) trafia bezpośrednio od klienta do urzędu, natomiast zapytania do GUNB są tunelowane przez nasz własny serwer (`server.js`), aby ominąć restrykcje CORS.
+Aplikacja to czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6). Moduł mapowy to otwartoźródłowy **Leaflet.js (v1.9.4)**. Translacja układów współrzędnych realizowana przez bibliotekę matematyczną **Proj4js**. Wszystkie zapytania (ULDK, GDOŚ, NMT) trafiają bezpośrednio do urzędów, a zapytania do GUNB są tunelowane przez publiczne proxy `api.allorigins.win`.
 
 Pobierane zbiory danych poprzez standardy OGC (WMS / REST API):
 
