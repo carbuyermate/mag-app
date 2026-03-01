@@ -34,11 +34,31 @@ Praca z oficjalnym portalem Geoportal.gov.pl na urządzeniach mobilnych jest w t
   - **Wysokość terenu (NMT):** Odczyt wysokości metrach nad poziomem morza w klikniętym punkcie z dokładnego ukształtowania GUGiK.
   - **Ograniczenia Środowiskowe (GDOŚ):** Automatyczna kalkulacja kolizji (intersekcji obrysu geometrii działki) ze wszystkimi państwowymi formami ochrony środowiska za pomocą WFS `CQL_FILTER`.
   - **Wnioski i Pozwolenia (GUNB):** Zautomatyzowany łącznik wysyłający użytkownika wprost do państwowego rejestru RWDZ w celu sprawdzenia wydanych decyzi i toczących się postępowań dla danej lokalizacji.
-  - **Sprawy Urzędowe i Smart Links:** Wyliczenia właściwości sądowej Księgi Wieczystej wraz z gotowymi odnośnikami do Google Maps z nawigacją do Starostwa i Sądu. Kierowanie do państwowego portalu KW.
-- ** Uzbrojenie Terenu na Żywo (KIUT):** Weryfikacja obecności kabli (Prąd, Woda, Gaz, Telekomunikacja itd.) z renderingiem poszerzonym (DPI Hack) nakładanym bezpośrednio na satelitę ze Starostw.
-- ** Multi-warstwowy podkład:** Klasyczny OSM, Google Satelita, Esri Satelita, Ortofotomapa rządu. Płynnie powiększana poza limity dzięki zniekształcaniu wektorowemu bazy (Deep Zoom do 24x).
+  - **Sprawy Urzędowe i Smart Links:** Wyliczenia właściwości sądowej Księgi Wieczystej wraz z gotowymi odnośnikami do Google Maps z nawigacją do Starostwa (Wydział Geodezji) i Sądu. Kierowanie do państwowego portalu KW.
 
-## 6. Architektura i Źródła Danych (API & Bazy)
+## 6. Co dokładnie sprawdzisz i włączysz na mapie? (Dostępne Warstwy)
+Aplikacja posiada boczne menu z przełącznikami (toggles), pozwalającymi swobodnie włączać i wyłączać poszczególne pakiety danych nałożone na mapę:
+- **Ewidencja gruntów (Kataster):**
+  - Granice działek ewidencyjnych
+  - Numery działek
+  - Obrysy budynków (części nadziemne)
+- **Uzbrojenie terenu (Media podziemne i nadziemne):**
+  - Sieć wodociągowa (niebieska)
+  - Sieć prądowa / elektroenergetyczna (czerwona)
+  - Sieć kanalizacyjna (brązowa)
+  - Sieć gazowa (żółta)
+  - Sieć ciepłownicza (fioletowa)
+  - Sieć telekomunikacyjna (pomarańczowa)
+  - Sieci specjalne i inne (szczegółowe rurociągi)
+- **Ograniczenia środowiskowe i strefy chronione:**
+  - Parki Narodowe i Parki Krajobrazowe
+  - Rezerwaty Przyrody i Pomniki Przyrody
+  - Ptasie oraz Siedliskowe obszary Natura 2000 (OSO/SOO)
+  - Obszary Chronionego Krajobrazu (OCHK)
+  - Użytki Ekologiczne i Stanowiska Dokumentacyjne
+- **Multi-warstwowy podkład mapowy:** Klasyczny plan ulic (OSM), Google Satelita, Esri Satelita, bardzo szczegółowa Ortofotomapa rządu. Mapy można płynnie powiększać poza standardowe limity (Deep Zoom do 24x).
+
+## 7. Architektura i Źródła Danych (API & Bazy)
 Czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6) napędzany silnikiem **Leaflet.js** połączonym z **Proj4js** do translacji natywnej rzutowania sferycznego do układu płaskiego PUWG 1992 (EPSG:2180). Bazy są doczytywane w sposób asynchroniczny z API rządowych za pomocą Promise.allSettled ograniczając czas reakcji.
 
 ### A. Główny Urząd Geodezji i Kartografii (GUGiK)
