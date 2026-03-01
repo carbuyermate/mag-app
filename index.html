@@ -1971,37 +1971,9 @@
 
                         const gunbEl = document.getElementById('pp-gunb-content');
 
-                        // Helper do uruchamiania wyszukiwarki GUNB za pomocą POST
-                        window.submitGunbForm = (teryt) => {
-                            const parts = teryt.split('.');
-                            if (parts.length < 3) {
-                                window.open('https://wyszukiwarka.gunb.gov.pl/', '_blank');
-                                return;
-                            }
-                            const organ = parts[0] + '.' + parts[1];
-                            const parcel = parts[2];
-
-                            const form = document.createElement('form');
-                            form.method = 'POST';
-                            form.action = 'https://wyszukiwarka.gunb.gov.pl/';
-                            form.target = '_blank';
-
-                            const addInput = (name, value) => {
-                                const i = document.createElement('input');
-                                i.type = 'hidden'; i.name = name; i.value = value;
-                                form.appendChild(i);
-                            };
-
-                            addInput('ew_organ', organ);
-                            addInput('ew_parcel', parcel);
-                            addInput('invest_purpose', 'all');
-                            addInput('invest', 'all');
-                            addInput('submit', 'submit'); // Wymagane przez PHP urzędu, by uznać formularz za wysłany
-
-                            document.body.appendChild(form);
-                            form.submit();
-                            document.body.removeChild(form);
-                        };
+                        const terytParts = dataUldk.teryt.split('.');
+                        const organ = terytParts.length > 2 ? terytParts[0] + '.' + terytParts[1] : '';
+                        const parcel = terytParts.length > 2 ? terytParts[2] : '';
 
                         if (gunbResult === 'loading') {
                             gunbEl.innerHTML = '<span class="loading-text"><i class="fa fa-spinner spin"></i> Pobieranie danych z rejestru RWDZ...</span>';
@@ -2016,9 +1988,16 @@
                                     <div style="font-size: 12px; margin-bottom: 10px; line-height: 1.4; color: var(--text-muted);">
                                         <i class="fa fa-circle-info" style="color:var(--blue)"></i> ${msg} Skorzystaj z oficjalnego formularza poniżej:
                                     </div>
-                                    <a href="#" onclick="window.submitGunbForm('${dataUldk.teryt}'); return false;" class="btn-check" style="display: block; text-align: center; text-decoration: none; padding: 10px; background: var(--blue); color: #fff; border-radius: 4px; font-weight: bold; font-size: 13px; transition: 0.2s;">
-                                        <i class="fa fa-external-link"></i> Sprawdź w rejestrze GUNB
-                                    </a>
+                                    <form method="POST" action="https://wyszukiwarka.gunb.gov.pl/" target="_blank" style="margin:0;">
+                                        <input type="hidden" name="ew_organ" value="${organ}">
+                                        <input type="hidden" name="ew_parcel" value="${parcel}">
+                                        <input type="hidden" name="invest_purpose" value="all">
+                                        <input type="hidden" name="invest" value="all">
+                                        <input type="hidden" name="submit" value="submit">
+                                        <button type="submit" class="btn-check" style="width: 100%; display: block; text-align: center; border: none; cursor: pointer; padding: 10px; background: var(--blue); color: #fff; border-radius: 4px; font-weight: bold; font-size: 13px; transition: 0.2s;">
+                                            <i class="fa fa-external-link"></i> Sprawdź w rejestrze GUNB
+                                        </button>
+                                    </form>
                                     <div style="font-size: 10px; margin-top: 8px; text-align: center; color: var(--text-muted);">
                                         (Wymaga przepisania kodu z obrazka na stronie urzędu)
                                     </div>
