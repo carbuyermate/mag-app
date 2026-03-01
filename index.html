@@ -1464,181 +1464,185 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Info panel -->
-                <div id="info-panel">
-                    <div class="info-title"><i class="fa fa-map-pin"></i> Informacje o działce</div>
-                    <div id="info-content"></div>
-                </div>
-
-            </div><!-- sidebar-body -->
-
-            <div id="status-bar">
-                <div id="status-dot"></div>
-                <span id="status-text">Gotowy · dane z GUGiK i GDOŚ</span>
             </div>
-        </div><!-- sidebar -->
 
-        <!-- Mobile toggle button -->
-        <button id="sidebar-toggle" title="Menu">
-            <i class="fa fa-bars"></i>
+
+            <!-- Info panel -->
+            <div id="info-panel">
+                <div class="info-title"><i class="fa fa-map-pin"></i> Informacje o działce</div>
+                <div id="info-content"></div>
+            </div>
+
+        </div><!-- sidebar-body -->
+
+        <div id="status-bar">
+            <div id="status-dot"></div>
+            <span id="status-text">Gotowy · dane z GUGiK i GDOŚ</span>
+        </div>
+    </div><!-- sidebar -->
+
+    <!-- Mobile toggle button -->
+    <button id="sidebar-toggle" title="Menu">
+        <i class="fa fa-bars"></i>
+    </button>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- FABs -->
+    <div id="fab-container">
+        <button class="fab" id="btn-gps" title="Moja lokalizacja">
+            <i class="fa fa-location-crosshairs"></i>
         </button>
+    </div>
 
-        <!-- Map -->
-        <div id="map"></div>
+    <!-- Coord bar -->
+    <div id="coord-bar">
+        <span>📍 kliknij mapę aby sprawdzić działkę</span>
+        <span id="coord-lat"></span>
+        <span id="coord-lng"></span>
+    </div>
 
-        <!-- FABs -->
-        <div id="fab-container">
-            <button class="fab" id="btn-gps" title="Moja lokalizacja">
-                <i class="fa fa-location-crosshairs"></i>
-            </button>
-        </div>
+    <!-- API Spinner -->
+    <div id="api-spinner">
+        <i class="fa fa-circle-notch spin"></i>
+        <span id="spinner-text">Pobieranie danych…</span>
+    </div>
 
-        <!-- Coord bar -->
-        <div id="coord-bar">
-            <span>📍 kliknij mapę aby sprawdzić działkę</span>
-            <span id="coord-lat"></span>
-            <span id="coord-lng"></span>
-        </div>
-
-        <!-- API Spinner -->
-        <div id="api-spinner">
-            <i class="fa fa-circle-notch spin"></i>
-            <span id="spinner-text">Pobieranie danych…</span>
-        </div>
-
-        <!-- Parcel Panel Modal -->
-        <div id="parcel-panel">
-            <div class="pp-header">
-                <button class="pp-close" onclick="closeParcelPanel()">&times;</button>
-                <div class="pp-title">Działka nr: <span id="pp-parcel-no">---</span></div>
-                <div class="pp-teryt">Identyfikator TERYT: <span id="pp-teryt-id">---</span></div>
-                <div class="pp-teryt" id="pp-elevation-container"
-                    style="display:none; border-top: 1px solid rgba(255,255,255,0.1); margin-top:6px; padding-top:6px;">
-                    <i class="fa fa-mountain"></i> Wysokość terenu: <strong id="pp-elevation-val"
-                        style="color:#ffffff;">---</strong> <span style="font-size:10px;">m n.p.m.</span>
-                </div>
-            </div>
-            <div class="pp-body">
-                <!-- Sekcja 1: Lokalizacja administracyjna -->
-                <div class="pp-section">
-                    <div class="pp-sec-header"><i class="fa fa-map-location-dot"></i> 1. Lokalizacja administracyjna
-                    </div>
-                    <div class="pp-sec-content">
-                        <div class="pp-row"><span class="pp-label">Województwo</span><span class="pp-val"
-                                id="pp-woj">---</span></div>
-                        <div class="pp-row"><span class="pp-label">Powiat</span><span class="pp-val"
-                                id="pp-pow">---</span></div>
-                        <div class="pp-row"><span class="pp-label">Gmina</span><span class="pp-val"
-                                id="pp-gmi">---</span></div>
-                        <div class="pp-row"><span class="pp-label">Miejscowość / Obręb</span><span class="pp-val"
-                                id="pp-obr">---</span></div>
-                    </div>
-                </div>
-
-                <!-- Sekcja 2: Ograniczenia i Środowisko -->
-                <div class="pp-section">
-                    <div class="pp-sec-header"><i class="fa fa-leaf"></i> 2. Ograniczenia i Środowisko</div>
-                    <div class="pp-sec-content">
-                        <div id="pp-gdos-content">
-                            <span class="loading-text">Sprawdzanie rejestrów...</span>
-                        </div>
-                        <div
-                            style="font-size: 10px; color: #9ca3af; margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; line-height: 1.3;">
-                            ⚠️ Dane z GDOŚ (analityka wektorowa). Nie odzwierciedlają stref konserwatorskich zabytków
-                            ani zapisów Miejscowego Planu Zagospodarowania Przestrzennego (MPZP), które blokują WZ na
-                            etapie urzędniczym. Szukaj śladów rewizji fizycznie w gruncie z wykrywaczem! Przepraszamy za
-                            braki w rejestrach państwowych.
-                        </div>
-                    </div>
-                </div>
-
-
-                <!-- Sekcja 3: Sprawy urzędowe -->
-                <div class="pp-section">
-                    <div class="pp-sec-header"><i class="fa fa-building-columns"></i> 3. Sprawy urzędowe</div>
-                    <div class="pp-sec-content">
-                        <div style="color:#fff; font-weight:600; margin-bottom:5px;">Jednostka właściwa ewidencji:</div>
-                        <div class="pp-box">
-                            <i class="fa fa-landmark" style="color:#9ca3af"></i> <span id="pp-urzad-nazwa"
-                                style="color:#ffffff">---</span><br>
-                            <div style="font-size:11px; margin-top:4px; margin-bottom:10px; color:#d1d5db;"><i
-                                    class="fa fa-location-dot"></i> <span id="pp-urzad-adres">Wydział Geodezji i
-                                    Kartografii</span></div>
-                            <a href="#" id="pp-urzad-link" target="_blank" class="pp-cta secondary"
-                                style="font-size:11px; padding:6px 10px; margin-top:5px;"><i
-                                    class="fa fa-map-location-dot"></i> Sprawdź kontakt i dojazd</a>
-                        </div>
-
-                        <div style="color:#ffffff; font-weight:600; margin-top:15px; margin-bottom:5px;">Księgi
-                            Wieczyste:</div>
-                        <div class="pp-box">
-                            <i class="fa fa-scale-balanced" style="color:#9ca3af"></i> <span id="pp-sad-nazwa"
-                                style="color:#ffffff">---</span><br>
-                            <div style="font-size:11px; margin-top:4px; margin-bottom:10px; color:#d1d5db;"><i
-                                    class="fa fa-location-dot"></i> Wydział Ksiąg Wieczystych</div>
-                            <a href="#" id="pp-sad-link" target="_blank" class="pp-cta secondary"
-                                style="font-size:11px; padding:6px 10px; margin-top:5px;"><i
-                                    class="fa fa-map-location-dot"></i> Sprawdź kontakt i dojazd</a>
-
-                            <div class="pp-highlight-box">
-                                Twój kod wydziału:
-                                <strong id="pp-sad-kod">XXXX</strong>
-                                <p>Wszystkie numery ksiąg dla tej działki zaczynają się od tego kodu.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sekcja 4: Jak sprawdzić właściciela online -->
-                <div class="pp-section" style="border-color: var(--accent);">
-                    <div class="pp-sec-header" style="background: rgba(46, 160, 67, 0.15); color: var(--accent);"><i
-                            class="fa fa-magnifying-glass"></i> 4. Jak sprawdzić właściciela online?</div>
-                    <div class="pp-sec-content">
-
-                        <div class="pp-step">
-                            <div class="pp-step-title">Krok 1: Zdobądź pełny numer KW</div>
-                            <div class="pp-step-desc">Aby sprawdzić właściciela, potrzebujesz pełnego numeru KW (np.
-                                SR1W/00012345/6). Urzędy nie podają go publicznie wprost. Możesz go uzyskać na podstawie
-                                samej nazwy działki korzystając z komercyjnych zewnętrznych baz danych.</div>
-                            <a href="https://ksiegiwieczyste.pl" target="_blank" class="pp-cta primary"><i
-                                    class="fa fa-unlock-keyhole"></i> Odkryj numer KW online</a>
-                            <div style="text-align:center; font-size:10px; margin-top:5px; opacity:0.6;">(Usługa
-                                zewnętrzna, płatna - link afiliacyjny)</div>
-                        </div>
-
-                        <div class="pp-step">
-                            <div class="pp-step-title">Krok 2: Sprawdź księgę za darmo</div>
-                            <div class="pp-step-desc">Mając już pełny, 8-cyfrowy numer wraz z prefiksem wydziału, wejdź
-                                na oficjalną stronę Ministerstwa Sprawiedliwości celem bezpłatnego wglądu m.in w działy
-                                własności i hipotek z pełnymi danymi właścicieli i ew. zadłużeniem.</div>
-                            <a href="https://ekw.ms.gov.pl/eukw_prz/KsiegiWieczyste.wk" target="_blank"
-                                class="pp-cta secondary"><i class="fa fa-building-flag"></i> Przejdź do przeglądarki EKW
-                                (Gov)</a>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Sekcja 5: Wnioski i Pozwolenia (GUNB) -->
-                <div class="pp-section" style="border-color: var(--blue);">
-                    <div class="pp-sec-header" style="background: rgba(56, 139, 253, 0.15); color: var(--blue);"><i
-                            class="fa fa-hard-hat"></i> 5. Wnioski i Pozwolenia (GUNB)</div>
-                    <div class="pp-sec-content">
-                        <div class="pp-step-desc" style="margin-bottom: 10px;">
-                            Sprawdź oficjalną bazę Rejestru Wniosków, Decyzji i Zgłoszeń (RWDZ) prowadzoną przez Główny
-                            Urząd Nadzoru Budowlanego, aby dowiedzieć się o planowanych i realizowanych inwestycjach
-                            budowlanych na tej działce.
-                        </div>
-                        <a href="https://wyszukiwarka.gunb.gov.pl/" target="_blank" class="pp-cta primary"
-                            style="background: var(--blue);"><i class="fa fa-external-link"></i> Przejdź do wyszukiwarki
-                            GUNB</a>
-                    </div>
-                </div>
-
-                <div style="height: 40px;"></div> <!-- bottom spacing -->
+    <!-- Parcel Panel Modal -->
+    <div id="parcel-panel">
+        <div class="pp-header">
+            <button class="pp-close" onclick="closeParcelPanel()">&times;</button>
+            <div class="pp-title">Działka nr: <span id="pp-parcel-no">---</span></div>
+            <div class="pp-teryt">Identyfikator TERYT: <span id="pp-teryt-id">---</span></div>
+            <div class="pp-teryt" id="pp-elevation-container"
+                style="display:none; border-top: 1px solid rgba(255,255,255,0.1); margin-top:6px; padding-top:6px;">
+                <i class="fa fa-mountain"></i> Wysokość terenu: <strong id="pp-elevation-val"
+                    style="color:#ffffff;">---</strong> <span style="font-size:10px;">m n.p.m.</span>
             </div>
         </div>
+        <div class="pp-body">
+            <!-- Sekcja 1: Lokalizacja administracyjna -->
+            <div class="pp-section">
+                <div class="pp-sec-header"><i class="fa fa-map-location-dot"></i> 1. Lokalizacja administracyjna
+                </div>
+                <div class="pp-sec-content">
+                    <div class="pp-row"><span class="pp-label">Województwo</span><span class="pp-val"
+                            id="pp-woj">---</span></div>
+                    <div class="pp-row"><span class="pp-label">Powiat</span><span class="pp-val" id="pp-pow">---</span>
+                    </div>
+                    <div class="pp-row"><span class="pp-label">Gmina</span><span class="pp-val" id="pp-gmi">---</span>
+                    </div>
+                    <div class="pp-row"><span class="pp-label">Miejscowość / Obręb</span><span class="pp-val"
+                            id="pp-obr">---</span></div>
+                </div>
+            </div>
+
+            <!-- Sekcja 2: Ograniczenia i Środowisko -->
+            <div class="pp-section">
+                <div class="pp-sec-header"><i class="fa fa-leaf"></i> 2. Ograniczenia i Środowisko</div>
+                <div class="pp-sec-content">
+                    <div id="pp-gdos-content">
+                        <span class="loading-text">Sprawdzanie rejestrów...</span>
+                    </div>
+                    <div
+                        style="font-size: 10px; color: #9ca3af; margin-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; line-height: 1.3;">
+                        ⚠️ Dane z GDOŚ (analityka wektorowa). Nie odzwierciedlają stref konserwatorskich zabytków
+                        ani zapisów Miejscowego Planu Zagospodarowania Przestrzennego (MPZP), które blokują WZ na
+                        etapie urzędniczym. Szukaj śladów rewizji fizycznie w gruncie z wykrywaczem! Przepraszamy za
+                        braki w rejestrach państwowych.
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Sekcja 3: Sprawy urzędowe -->
+            <div class="pp-section">
+                <div class="pp-sec-header"><i class="fa fa-building-columns"></i> 3. Sprawy urzędowe</div>
+                <div class="pp-sec-content">
+                    <div style="color:#fff; font-weight:600; margin-bottom:5px;">Jednostka właściwa ewidencji:</div>
+                    <div class="pp-box">
+                        <i class="fa fa-landmark" style="color:#9ca3af"></i> <span id="pp-urzad-nazwa"
+                            style="color:#ffffff">---</span><br>
+                        <div style="font-size:11px; margin-top:4px; margin-bottom:10px; color:#d1d5db;"><i
+                                class="fa fa-location-dot"></i> <span id="pp-urzad-adres">Wydział Geodezji i
+                                Kartografii</span></div>
+                        <a href="#" id="pp-urzad-link" target="_blank" class="pp-cta secondary"
+                            style="font-size:11px; padding:6px 10px; margin-top:5px;"><i
+                                class="fa fa-map-location-dot"></i> Sprawdź kontakt i dojazd</a>
+                    </div>
+
+                    <div style="color:#ffffff; font-weight:600; margin-top:15px; margin-bottom:5px;">Księgi
+                        Wieczyste:</div>
+                    <div class="pp-box">
+                        <i class="fa fa-scale-balanced" style="color:#9ca3af"></i> <span id="pp-sad-nazwa"
+                            style="color:#ffffff">---</span><br>
+                        <div style="font-size:11px; margin-top:4px; margin-bottom:10px; color:#d1d5db;"><i
+                                class="fa fa-location-dot"></i> Wydział Ksiąg Wieczystych</div>
+                        <a href="#" id="pp-sad-link" target="_blank" class="pp-cta secondary"
+                            style="font-size:11px; padding:6px 10px; margin-top:5px;"><i
+                                class="fa fa-map-location-dot"></i> Sprawdź kontakt i dojazd</a>
+
+                        <div class="pp-highlight-box">
+                            Twój kod wydziału:
+                            <strong id="pp-sad-kod">XXXX</strong>
+                            <p>Wszystkie numery ksiąg dla tej działki zaczynają się od tego kodu.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sekcja 4: Jak sprawdzić właściciela online -->
+            <div class="pp-section" style="border-color: var(--accent);">
+                <div class="pp-sec-header" style="background: rgba(46, 160, 67, 0.15); color: var(--accent);"><i
+                        class="fa fa-magnifying-glass"></i> 4. Jak sprawdzić właściciela online?</div>
+                <div class="pp-sec-content">
+
+                    <div class="pp-step">
+                        <div class="pp-step-title">Krok 1: Zdobądź pełny numer KW</div>
+                        <div class="pp-step-desc">Aby sprawdzić właściciela, potrzebujesz pełnego numeru KW (np.
+                            SR1W/00012345/6). Urzędy nie podają go publicznie wprost. Możesz go uzyskać na podstawie
+                            samej nazwy działki korzystając z komercyjnych zewnętrznych baz danych.</div>
+                        <a href="https://ksiegiwieczyste.pl" target="_blank" class="pp-cta primary"><i
+                                class="fa fa-unlock-keyhole"></i> Odkryj numer KW online</a>
+                        <div style="text-align:center; font-size:10px; margin-top:5px; opacity:0.6;">(Usługa
+                            zewnętrzna, płatna - link afiliacyjny)</div>
+                    </div>
+
+                    <div class="pp-step">
+                        <div class="pp-step-title">Krok 2: Sprawdź księgę za darmo</div>
+                        <div class="pp-step-desc">Mając już pełny, 8-cyfrowy numer wraz z prefiksem wydziału, wejdź
+                            na oficjalną stronę Ministerstwa Sprawiedliwości celem bezpłatnego wglądu m.in w działy
+                            własności i hipotek z pełnymi danymi właścicieli i ew. zadłużeniem.</div>
+                        <a href="https://ekw.ms.gov.pl/eukw_prz/KsiegiWieczyste.wk" target="_blank"
+                            class="pp-cta secondary"><i class="fa fa-building-flag"></i> Przejdź do przeglądarki EKW
+                            (Gov)</a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sekcja 5: Wnioski i Pozwolenia (GUNB) -->
+        <div class="pp-section" style="border-color: var(--blue);">
+            <div class="pp-sec-header" style="background: rgba(56, 139, 253, 0.15); color: var(--blue);"><i
+                    class="fa fa-hard-hat"></i> 5. Wnioski i Pozwolenia (GUNB)</div>
+            <div class="pp-sec-content">
+                <div class="pp-step-desc" style="margin-bottom: 10px;">
+                    Sprawdź oficjalną bazę Rejestru Wniosków, Decyzji i Zgłoszeń (RWDZ) prowadzoną przez Główny Urząd
+                    Nadzoru Budowlanego, aby dowiedzieć się o planowanych i realizowanych inwestycjach budowlanych na
+                    tej działce.
+                </div>
+                <a href="https://wyszukiwarka.gunb.gov.pl/" target="_blank" class="pp-cta primary"
+                    style="background: var(--blue);"><i class="fa fa-external-link"></i> Przejdź do wyszukiwarki
+                    GUNB</a>
+            </div>
+        </div>
+
+        <div style="height: 40px;"></div> <!-- bottom spacing -->
+    </div>
+    </div>
 
     </div><!-- app -->
 
