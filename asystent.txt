@@ -8,29 +8,33 @@ Narzędzie zostało stworzone z myślą o profesjonalistach pracujących "w tere
 - Geodeci (rozpoznanie terenu, lokalizacja punktów startowych, weryfikacja uzbrojenia)
 - Architekci i projektanci (szybka ocena chłonności działki, kolizji z sieciami, stref p.poż/ochronnych)
 - Urzędnicy i inspektorzy nadzoru budowlanego (kontrola w terenie)
-- Rzeczoznawcy majątkowi i pośrednicy nieruchomości
-- Inwestorzy prywatni kupujący działki lub planujący budowę
+- Rzeczoznawcy majątkowi i pośrednicy nieruchomości (sprawdzanie ksiąg wieczystych i danych z EGiB)
+- Inwestorzy prywatni kupujący działki lub planujący budowę (szybki kontakt do urzędów)
 
 ## 3. Jaki rozwiązuje problem? (Wartość dla Użytkownika)
 Praca z oficjalnymi portalem Geoportal.gov.pl na urządzeniach mobilnych jest wysoce niepraktyczna (skomplikowany interfejs, ogromne obciążenie pamięci telefonu, uciążliwa nawigacja). Mobilny Asystent Geodezyjny rozwiązuje ten problem, oferując:
 - **Błyskawiczny czas ładowania:** Aplikacja waży kilkadziesiąt kilobajtów i ładuje mapę natychmiast.
-- **Interfejs "Mobile-First":** Duże przyciski, intuicyjne przełączniki (toggles), pełnokranowa mapa optymalizowana pod dotyk i obsługę jedną ręką (np. w słońcu, na budowie).
+- **Interfejs "Mobile-First":** Duże przyciski, intuicyjne przełączniki (toggles), wysuwane panele kaskadowe optymalizowane pod dotyk i obsługę jedną ręką (np. w słońcu, na budowie).
 - **Zasada "Jeden plik = jedno narzędzie":** Aplikację można pobrać na dysk/telefon, wysłać mailem i uruchomić offline (logika i interfejs; mapy ładują się z sieci).
 - **Agregacja rozproszonych danych w jednym miejscu:** Użytkownik nie musi przełączać się między wieloma geoportalami (branżowymi, GDOŚ, GUGiK) - MAG nakłada je wszystkie na jedną ośrodek mapowy.
+- **Odciąża z biurokracji:** Automatyczne generowanie kodu wydziału Sądu Wieczystoksięgowego i inteligentne linki "Smart Links" kierujące od razu do właściwego Starostwa w Google Maps bez potrzeby żmudnego "guglowania".
 
 ## 4. Czym różni się od rządowych i komercyjnych portali rynkowych?
-- **Brak przeładowania funkcjami (Over-engineering):** Zamiast tysięcy opcji analitycznych, narzędzi pomiarowych i warstw historycznych (jak w QGIS czy pełnym Geoportalu), MAG stawia na ascetyczne minimum: "Pokaż mi, gdzie jestem (GPS), daj mi adres, nałóż działki, uzbrojenie i strefy ekologiczne".
+- **Brak przeładowania funkcjami (Over-engineering):** Zamiast tysięcy opcji analitycznych, narzędzi pomiarowych i warstw historycznych (jak w QGIS czy pełnym Geoportalu), MAG stawia na ascetyczne minimum: "Pokaż mi, gdzie jestem (GPS), daj mi adres, nałóż działki, uzbrojenie, strefy ekologiczne i podaj telefon do urzędu".
 - **Bezpieczeństwo i prywatność:** Aplikacja działa wyłącznie w przeglądarce klienta (Client-Side). Nie korzysta z żadnych baz pośredniczących (backendu), nie śledzi ruchów użytkownika ani nie loguje zapytań na prywatnych serwerach. Komunikuje się bezpośrednio (P2P) z serwerami polskiego rządu. Wymusza prywatność.
 - **Bypass CORS dla lokalnego użytku:** Unikalne rozwiązanie wbudowanego dynamicznego proxy (`corsproxy.io`) pozwala uruchamiać potężne skrypty analityczne bezpośrednio z pliku na pulpicie (lokalnie), omijając zabezpieczenia Cross-Origin, które normalnie blokują komunikację z państwowymi API w przypadku braku certyfikowanego serwera.
 
 ## 5. Kluczowe Funkcje Aplikacji
 - ** Geolokalizacja GPS na żywo:** Przycisk centrowania kamery mapy bezpośrednio na fizycznej lokalizacji użytkownika stojącego w szczerym polu.
 - ** Inteligentna Wyszukiwarka Adresów:** System autouzupełniania bazujący w pierwszej kolejności na państwowym API (ULDK GUGiK) operującym na oficjalnym słowniku TERYT, a w przypadku błędu – na światowym silniku Nominatim (OpenStreetMap).
-- ** Identyfikacja Działki (Click-to-identify):** Kliknięcie w dowolny punkt mapy wyświetla w bocznym i dolnym panelu szczegółowe metadane geometryczne z GUGiK (Numer ewidencyjny działki, Obręb, Gmina, Województwo, numeryczny kod TERYT).
+- ** Zaawansowany Panel Informacji o Działce:** Kliknięcie w dowolny punkt mapy wysuwa duży boczny panel ze zorganizowanymi sekcjami:
+  - **Lokalizacja administracyjna:** Numer działki, TERYT, Województwo, Powiat, Gmina, Obręb.
+  - **Ograniczenia i Środowisko:** (P-to-P) Automatyczna detekcja kolizji klikniętej działki z wielkopowierzchniowymi strefami ochrony przyrody GDOŚ. Wykorzystuje wektorową geometrię WKT pobraną z ULDK na bramce WFS (`CQL_FILTER=INTERSECTS`). Ostrzega to architekta o prawnych ograniczeniach terenu.
+  - **Sprawy Urzędowe i Smart Links:** Wskazuje właściwe Starostwo i Sąd Rejonowy (Wydział Ksiąg Wieczystych), automatycznie wyliczając prefix KW na podstawie danych TERYT. Generuje "Smart Links" kierujące bezpośrednio do sprawdzonych wizytówek urzędów w aplikacji Google Maps z danymi kontaktowymi i dojazdem.
+  - **Księgi Wieczyste Online:** Integracja edukująca, jak uzyskać pełny numer zablokowanej księgi oraz przekierowania do portali z księgami ministerstwa i prywatnych.
 - ** Multi-warstwowy podkład mapowy:** Możliwość swobodnego i płynnego przełączania baz formatki między OpenStreetMap, Google Maps Satelita, Esri World Imagery oraz Państwową Ortofotomapą GUGiK wysokiej rozdzielczości.
 - ** Engine Mapowy o głębokim powiększeniu (Deep Zoom):** Zmodyfikowany silnik mapowy Leaflet skalujący kafelki za pomocą "maxNativeZoom" poza standardowe limity (do zoomu 24), co pozwala oglądać sub-metrowe detale infrastruktury podziemnej bez znikania warstw.
 - ** Optymalizacja czytelności wektorów (DPI Hack):** Wymuszenie na serwerach rządowych renderingu z High-DPI (150dpi) oraz nad-próbkowanie obrazu kafelków WMS (tileSize: 512, zoomOffset: -1) celem pogrubienia mikroskopijnych, 1-pikselowych linii ewidencyjnych i infrastrukturalnych, poprawiając drastycznie czytelność pod słońcem na ekranie roboczym.
-- ** Analiza Ograniczeń Środowiskowych P-to-P (Polygon-to-Polygon):** Automatyczna detekcja kolizji klikniętej działki ewidencyjnej z wielkopowierzchniowymi strefami ochrony przyrody. Wykorzystuje wektorową geometrię działki (WKT) pobraną z ULDK i wykonuje zapytanie przestrzenne OGC WFS (CQL_FILTER=INTERSECTS) do serwerów GDOŚ w czasie rzeczywistym. Ostrzega to architekta/inwestora o prawnych ograniczeniach terenu bez ryzyka fałszywych odczytów (uwzględnia krawędzie całej działki, a nie tylko kliknięty punkt na ekranie).
 
 ## 6. Architektura i Źródła Danych (API & Bazy)
 Aplikacja to czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6). Moduł mapowy to otwartoźródłowy **Leaflet.js (v1.9.4)**. Translacja układów współrzędnych realizowana przez bibliotekę matematyczną **Proj4js**.

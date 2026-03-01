@@ -1904,16 +1904,23 @@
             cleanPowiat = cleanPowiat.charAt(0).toUpperCase() + cleanPowiat.slice(1);
             
             let urzadMapQ = '';
-            if (isCity) {
-                document.getElementById('pp-urzad-nazwa').textContent = `Urząd Miasta ${cleanPowiat}`;
-                urzadMapQ = `Urząd Miasta ${cleanPowiat}`;
-            } else {
-                document.getElementById('pp-urzad-nazwa').textContent = `Starostwo Powiatowe w ${cleanPowiat}`;
-                urzadMapQ = `Starostwo Powiatowe w ${cleanPowiat}`;
-            }
+            let uiUrzad = '';
+            let uiSad = '';
 
-            const sadMapQ = `Sąd Rejonowy Wydział Ksiąg Wieczystych w ${cleanPowiat}`;
-            document.getElementById('pp-sad-nazwa').textContent = `Sąd Rejonowy w ${cleanPowiat}`;
+            if (isCity) {
+                uiUrzad = `Urząd Miasta ${cleanPowiat}`;
+                urzadMapQ = uiUrzad;
+                uiSad = `Sąd Rejonowy w ${cleanPowiat}`;
+            } else {
+                uiUrzad = `Starostwo Powiatowe (${powName.toLowerCase()})`;
+                urzadMapQ = `Starostwo Powiatowe ${powName.toLowerCase()}`;
+                uiSad = `Sąd Rejonowy (${powName.toLowerCase()})`;
+            }
+            
+            document.getElementById('pp-urzad-nazwa').textContent = uiUrzad;
+            document.getElementById('pp-sad-nazwa').textContent = uiSad;
+
+            const sadMapQ = `Sąd Rejonowy Wydział Ksiąg Wieczystych ${isCity ? cleanPowiat : powName.toLowerCase()}`;
 
             // Podepnij wygenerowane linki Google Maps
             document.getElementById('pp-urzad-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(urzadMapQ)}`;
