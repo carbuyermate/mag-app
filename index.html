@@ -1460,6 +1460,9 @@
                 <button class="pp-close" onclick="closeParcelPanel()">&times;</button>
                 <div class="pp-title">Działka nr: <span id="pp-parcel-no">---</span></div>
                 <div class="pp-teryt">Identyfikator TERYT: <span id="pp-teryt-id">---</span></div>
+                <div class="pp-teryt" id="pp-elevation-container" style="display:none; border-top: 1px solid rgba(255,255,255,0.1); margin-top:6px; padding-top:6px;">
+                    <i class="fa fa-mountain"></i> Wysokość terenu: <strong id="pp-elevation-val" style="color:#ffffff;">---</strong> <span style="font-size:10px;">m n.p.m.</span>
+                </div>
             </div>
             <div class="pp-body">
                 <!-- Sekcja 1: Lokalizacja administracyjna -->
@@ -1787,6 +1790,21 @@
             }
         }
 
+        async function fetchNmtData(x_north, y_east) {
+            const url = `https://services.gugik.gov.pl/nmt/?request=GetHByXY&x=${x_north}&y=${y_east}`;
+            try {
+                const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
+                if (!response.ok) return { error: true };
+                const text = await response.text();
+                const num = parseFloat(text);
+                if (isNaN(num)) return { error: true };
+                return { status: 'success', value: num.toFixed(2) };
+            } catch (error) {
+                console.warn("Błąd pobierania danych NMT:", error);
+                return { error: true };
+            }
+        }
+
         let clickMarker = null;
 
         map.on('click', async e => {
@@ -1827,11 +1845,24 @@
 
                     let gdosResult = 'loading';
                     let gunbResult = 'loading';
+                    let nmtResult = 'loading';
 
                     const updateUI = () => {
                         document.getElementById('pp-parcel-no').textContent = dataUldk.parcel;
                         document.getElementById('pp-teryt-id').textContent = dataUldk.teryt;
-                        
+
+                        const nmtElParent = document.getElementById('pp-elevation-container');
+                        const nmtElVal = document.getElementById('pp-elevation-val');
+                        if (nmtResult === 'loading') {
+                            nmtElParent.style.display = 'block';
+                            nmtElVal.innerHTML = '<i class="fa fa-spinner spin"></i>';
+                        } else if (nmtResult?.error) {
+                            nmtElParent.style.display = 'none';
+                        } else {
+                            nmtElParent.style.display = 'block';
+                            nmtElVal.textContent = nmtResult.value;
+                        }
+
                         populateAdminAndCourt(dataUldk);
 
                         const gdosEl = document.getElementById('pp-gdos-content');
@@ -1892,13 +1923,15 @@
                     updateUI(); // renders initial "ładowanie..." statuses
                     setStatus(`Działka: ${dataUldk.parcel}`, 'ok');
 
-                    // KROK 2: Analityka przestrzenna GDOŚ i Rejestry GUNB rwdz
+                    // KROK 2: Analityka przestrzenna GDOŚ, Rejestry GUNB rwdz i NMT
                     Promise.allSettled([
                         checkGdosConstraints(dataUldk.geomWkt),
-                        fetchGunbData(dataUldk.teryt)
+                        fetchGunbData(dataUldk.teryt),
+                        fetchNmtData(y_2180, x_2180) // NMT API oczekuje X=Północ (Northing), Y=Wschód (Easting)
                     ]).then(results => {
                         gdosResult = results[0].status === 'fulfilled' ? results[0].value : { error: true };
                         gunbResult = results[1].status === 'fulfilled' ? results[1].value : { error: true };
+                        nmtResult = results[2].status === 'fulfilled' ? results[2].value : { error: true };
                         updateUI(); // refreshes UI with final data
                     });
 
