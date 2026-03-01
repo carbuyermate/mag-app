@@ -1,72 +1,61 @@
 # Mobilny Asystent Geodezyjny (MAG) - Dokumentacja i Specyfikacja Projektu
 
 ## 1. O aplikacji (Czym jest MAG?)
-Mobilny Asystent Geodezyjny to ultralekka, bezpieczna, jednoplikowa aplikacja internetowa (Single-Page Application w architekturze HTML/CSS/JS), pełniąca funkcję podręcznego systemu informacji przestrzennej (GIS). Służy do błyskawicznej weryfikacji danych geodezyjnych, administracyjnych, infrastrukturalnych i ekologicznych na ekranie telefonu lub komputera, bez konieczności instalowania oprogramowania czy zakładania kont.
+Mobilny Asystent Geodezyjny to ultralekka, bezpieczna, jednoplikowa aplikacja internetowa (Single-Page Application w architekturze HTML/CSS/JS), pełniąca funkcję podręcznego systemu informacji przestrzennej (GIS). Służy do błyskawicznej weryfikacji danych geodezyjnych, topograficznych (wysokość n.p.m.), administracyjnych, infrastrukturalnych i ekologicznych na ekranie telefonu lub komputera. Daje wgląd do baz planowanych budów i pozwoleń (GUNB), bez konieczności instalowania oprogramowania czy zakładania kont.
 
 ## 2. Dla kogo jest ta aplikacja? (Grupa Docelowa)
-Narzędzie zostało stworzone z myślą o profesjonalistach pracujących "w terenie" oraz osobach potrzebujących natychmiastowego dostępu do danych katastralnych:
-- Geodeci (rozpoznanie terenu, lokalizacja punktów startowych, weryfikacja uzbrojenia)
-- Architekci i projektanci (szybka ocena chłonności działki, kolizji z sieciami, stref p.poż/ochronnych)
-- Urzędnicy i inspektorzy nadzoru budowlanego (kontrola w terenie)
-- Rzeczoznawcy majątkowi i pośrednicy nieruchomości (sprawdzanie ksiąg wieczystych i danych z EGiB)
-- Inwestorzy prywatni kupujący działki lub planujący budowę (szybki kontakt do urzędów)
+Narzędzie zostało stworzone z myślą o profesjonalistach pracujących "w terenie" oraz osobach potrzebujących natychmiastowego dostępu do otwartych danych państwowych:
+- Geodeci i inżynierowie budownictwa (rozpoznanie terenu, lokalizacja punktów startowych, weryfikacja rzędnych terenu, uzbrojenia)
+- Architekci, planiści i projektanci (szybka ocena chłonności działki, form ukształtowania terenu, kolizji z sieciami, stref z ochrony GDOŚ)
+- Deweloperzy i inwestorzy prywatni (szybki skan sąsiedztwa pod kątem wydanych pozwoleń na budowę, zakup działki i sprawdzanie ksiąg)
+- Urzędnicy, leśnicy i inspektorzy nadzoru budowlanego (kontrola w terenie z wykorzystaniem dokładnego GPS)
+- Rzeczoznawcy majątkowi i pośrednicy nieruchomości (wycena zdalna, badanie obciążeń, szybki dostęp do struktury organów)
+- Osoby prywatne poszukujące działki budowlanej lub rekreacyjnej (weryfikacja czy w sąsiedztwie nie buduje się duża ferma lub fabryka na podstawie rejestru urzędu GUNB)
 
 ## 3. Jaki rozwiązuje problem? (Wartość dla Użytkownika)
-Praca z oficjalnymi portalem Geoportal.gov.pl na urządzeniach mobilnych jest wysoce niepraktyczna (skomplikowany interfejs, ogromne obciążenie pamięci telefonu, uciążliwa nawigacja). Mobilny Asystent Geodezyjny rozwiązuje ten problem, oferując:
-- **Błyskawiczny czas ładowania:** Aplikacja waży kilkadziesiąt kilobajtów i ładuje mapę natychmiast.
-- **Interfejs "Mobile-First":** Duże przyciski, intuicyjne przełączniki (toggles), wysuwane panele kaskadowe optymalizowane pod dotyk i obsługę jedną ręką (np. w słońcu, na budowie).
-- **Zasada "Jeden plik = jedno narzędzie":** Aplikację można pobrać na dysk/telefon, wysłać mailem i uruchomić offline (logika i interfejs; mapy ładują się z sieci).
-- **Agregacja rozproszonych danych w jednym miejscu:** Użytkownik nie musi przełączać się między wieloma geoportalami (branżowymi, GDOŚ, GUGiK) - MAG nakłada je wszystkie na jedną ośrodek mapowy.
-- **Odciąża z biurokracji:** Automatyczne generowanie kodu wydziału Sądu Wieczystoksięgowego i inteligentne linki "Smart Links" kierujące od razu do właściwego Starostwa w Google Maps bez potrzeby żmudnego "guglowania".
+Praca z oficjalnym portalem Geoportal.gov.pl na urządzeniach mobilnych jest w terenie wysoce niepraktyczna (duże obciążenie RAM, przycinające się menu). Mobilny Asystent Geodezyjny radykalnie ułatwia ten proces:
+- **Błyskawiczny czas ładowania:** Ekstremalnie lekka architektura ważąca ułamek wielkości wielkich systemów mapowych, lądująca w telefonie natychmiast.
+- **Interfejs "Mobile-First":** Intuicyjne menu boczne, proste przełączniki dla urządzeń infrastrukturalnych i stref środowiskowych obsługiwane jednym palcem.
+- **Paczki informacyjne w locie:** Automatyczne pobieranie wysokości terenu na podstawie map Numerycznego Modelu Terenu oraz pobieranie geolokalizacji z uwzględnieniem tolerancji marginesu błędu urządzenia.
+- **Rozwiązywanie węzłów biurokratycznych:** Generuje prefiksy wydziałów sądowych dla numerów Ksiąg Wieczystych, kieruje od razu do właściwego urzędu (nawigacja w mapach Google) i jednym kliknięciem przenosi do formularzy GUNB dla badanej parceli.
+- **Agregacja (ONE-STOP-SHOP):** Łączy bazy GUGiK (kataster i uzbrojenie), GDOŚ (rezerwaty, parki) oraz GUNB (pozwolenia) na jednym, płynnie działającym ekranie.
 
-## 4. Czym różni się od rządowych i komercyjnych portali rynkowych?
-- **Brak przeładowania funkcjami (Over-engineering):** Zamiast tysięcy opcji analitycznych, narzędzi pomiarowych i warstw historycznych (jak w QGIS czy pełnym Geoportalu), MAG stawia na ascetyczne minimum: "Pokaż mi, gdzie jestem (GPS), daj mi adres, nałóż działki, uzbrojenie, strefy ekologiczne i podaj telefon do urzędu".
-- **Bezpieczeństwo i prywatność:** Aplikacja działa wyłącznie w przeglądarce klienta (Client-Side). Nie korzysta z żadnych baz pośredniczących (backendu), nie śledzi ruchów użytkownika ani nie loguje zapytań na prywatnych serwerach. Komunikuje się bezpośrednio (P2P) z serwerami polskiego rządu. Wymusza prywatność.
-- **Bypass CORS dla GUNB (AllOrigins):** Ponieważ system RWDZ (GUNB) nie wspiera bezpośrednich zapytań z przeglądarki, aplikacja wykorzystuje darmowe, publiczne proxy `api.allorigins.win`. Pozwala to na błyskawiczne pobieranie danych na hostingu statycznym (Static Site) bez konieczności utrzymywania własnego serwera backendowego.
+## 4. Czym różni się od rządowych i komercyjnych portali rynkowych? (Przewagi Konkurencyjne)
+- **Ascetyczne minimum (No Over-engineering):** Celuje tylko w najważniejsze dla poszukiwaczy informacje: "Gdzie jestem, jaki to adres, czy jest woda i prąd, na jakiej jestem wysokości, czy to strefa chroniona i co tu się będzie budować?".
+- **Brak backendu i absolutna prywatność:** Działa lokalnie u klienta (P2P względem serwerów urzędowych). Nie wymaga żadnej bazy danych po stronie twórców, nie loguje informacji o tym, jakie działki sprawdzał inwestor. Gwarantuje prywatność deweloperom i osobom decyzyjnym.
+- **Niestandardowe podejście UX:** Łączy surowe warstwy wektorowe (WFS/WMS) z przyjaznymi kartami ("Smart Links") odwołującymi się bezpośrednio do narzędzi, z których użytkownik korzysta na co dzień (np. e-KW, Wyszukiwarka RWDZ urzędu budowlanego).
+- **Elastyczne obejście blokad urzędowych (RWDZ):** Reakcja na CAPTCH-e w rejestrach - system zamiast udawać bota, asystuje człowiekowi ładując dla niego na życzenie właściwe strony w zewnętrznych zakładkach ze sparametryzowanym miejscem.
 
 ## 5. Kluczowe Funkcje Aplikacji
-- ** Geolokalizacja GPS na żywo:** Przycisk centrowania kamery mapy bezpośrednio na fizycznej lokalizacji użytkownika stojącego w szczerym polu.
-- ** Inteligentna Wyszukiwarka Adresów:** System autouzupełniania bazujący w pierwszej kolejności na państwowym API (ULDK GUGiK) operującym na oficjalnym słowniku TERYT, a w przypadku błędu – na światowym silniku Nominatim (OpenStreetMap).
-- ** Zaawansowany Panel Informacji o Działce:** Kliknięcie w dowolny punkt mapy wysuwa duży boczny panel ze zorganizowanymi sekcjami:
-  - **Lokalizacja administracyjna:** Numer działki, TERYT, Województwo, Powiat, Gmina, Obręb.
-  - **Ograniczenia i Środowisko:** (P-to-P) Automatyczna detekcja kolizji klikniętej działki z wielkopowierzchniowymi strefami ochrony przyrody GDOŚ. Wykorzystuje wektorową geometrię WKT pobraną z ULDK na bramce WFS (`CQL_FILTER=INTERSECTS`). Ostrzega to architekta o prawnych ograniczeniach terenu.
-  - **Sprawy Urzędowe i Smart Links:** Wskazuje właściwe Starostwo i Sąd Rejonowy (Wydział Ksiąg Wieczystych), automatycznie wyliczając prefix KW na podstawie danych TERYT. Generuje "Smart Links" kierujące bezpośrednio do sprawdzonych wizytówek urzędów w aplikacji Google Maps z danymi kontaktowymi i dojazdem.
-  - **Księgi Wieczyste Online:** Integracja edukująca, jak uzyskać pełny numer zablokowanej księgi oraz przekierowania do portali z księgami ministerstwa i prywatnych.
-- ** Multi-warstwowy podkład mapowy:** Możliwość swobodnego i płynnego przełączania baz formatki między OpenStreetMap, Google Maps Satelita, Esri World Imagery oraz Państwową Ortofotomapą GUGiK wysokiej rozdzielczości.
-- ** Engine Mapowy o głębokim powiększeniu (Deep Zoom):** Zmodyfikowany silnik mapowy Leaflet skalujący kafelki za pomocą "maxNativeZoom" poza standardowe limity (do zoomu 24), co pozwala oglądać sub-metrowe detale infrastruktury podziemnej bez znikania warstw.
-- ** Optymalizacja czytelności wektorów (DPI Hack):** Wymuszenie na serwerach rządowych renderingu z High-DPI (150dpi) oraz nad-próbkowanie obrazu kafelków WMS (tileSize: 512, zoomOffset: -1) celem pogrubienia mikroskopijnych, 1-pikselowych linii ewidencyjnych i infrastrukturalnych, poprawiając drastycznie czytelność pod słońcem na ekranie roboczym.
+- ** Geolokalizacja GPS na żywo:** Pozycjonowanie z wyświetlaniem rzeczywistej dokładności pomiarowej (w metrach) pobieranej z odbiornika satelitarnego telefonu.
+- ** Inteligentna Wyszukiwarka Adresów:** System autouzupełniania bazujący wpierw na precyzyjnym państwowym API (ULDK GUGiK), a jako fallback – na silniku Nominatim (OSM).
+- ** Panel Informacyjny Działki w Czasie Rzeczywistym:**
+  - **Lokalizacja i TERYT:** Pełny adres geodezyjny.
+  - **Wysokość terenu (NMT):** Odczyt wysokości metrach nad poziomem morza w klikniętym punkcie z dokładnego ukształtowania GUGiK.
+  - **Ograniczenia Środowiskowe (GDOŚ):** Automatyczna kalkulacja kolizji (intersekcji obrysu geometrii działki) ze wszystkimi państwowymi formami ochrony środowiska za pomocą WFS `CQL_FILTER`.
+  - **Wnioski i Pozwolenia (GUNB):** Zautomatyzowany łącznik wysyłający użytkownika wprost do państwowego rejestru RWDZ w celu sprawdzenia wydanych decyzi i toczących się postępowań dla danej lokalizacji.
+  - **Sprawy Urzędowe i Smart Links:** Wyliczenia właściwości sądowej Księgi Wieczystej wraz z gotowymi odnośnikami do Google Maps z nawigacją do Starostwa i Sądu. Kierowanie do państwowego portalu KW.
+- ** Uzbrojenie Terenu na Żywo (KIUT):** Weryfikacja obecności kabli (Prąd, Woda, Gaz, Telekomunikacja itd.) z renderingiem poszerzonym (DPI Hack) nakładanym bezpośrednio na satelitę ze Starostw.
+- ** Multi-warstwowy podkład:** Klasyczny OSM, Google Satelita, Esri Satelita, Ortofotomapa rządu. Płynnie powiększana poza limity dzięki zniekształcaniu wektorowemu bazy (Deep Zoom do 24x).
 
 ## 6. Architektura i Źródła Danych (API & Bazy)
-Aplikacja to czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6). Moduł mapowy to otwartoźródłowy **Leaflet.js (v1.9.4)**. Translacja układów współrzędnych realizowana przez bibliotekę matematyczną **Proj4js**. Wszystkie zapytania (ULDK, GDOŚ, NMT) trafiają bezpośrednio do urzędów, a zapytania do GUNB są tunelowane przez publiczne proxy `api.allorigins.win`.
-
-Pobierane zbiory danych poprzez standardy OGC (WMS / REST API):
+Czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6) napędzany silnikiem **Leaflet.js** połączonym z **Proj4js** do translacji natywnej rzutowania sferycznego do układu płaskiego PUWG 1992 (EPSG:2180). Bazy są doczytywane w sposób asynchroniczny z API rządowych za pomocą Promise.allSettled ograniczając czas reakcji.
 
 ### A. Główny Urząd Geodezji i Kartografii (GUGiK)
-- **Podział Administracyjny i Ewidencja (KIEG - Krajowa Integracja Ewidencji Gruntów):**
-  - Granice i numery działek ewidencyjnych
-  - Kontury budynków (części nadziemne EGiB)
-- **Uzbrojenie Terenu (KIUT - Krajowa Integracja Uzbrojenia Terenu) [Wektorowe dane od Starostw z kolorystyką K-1]:**
-  - Przewody Wodociągowe, Kanalizacyjne, Gazowe, Elektroenergetyczne, Ciepłownicze, Telekomunikacyjne, Specjalne
-- **Ortofotomapa (WMS HighResolution):** Lotnicze zdjęcia powierzchni kraju
-- **Usługa Lokalizacji Działek Katastralnych (ULDK API):** Zwraca obrysy WKT i adresologię po współrzędnych XY oraz obsługuje wyszukiwarkę. Używana lokalnie poprzez konwersję lat/lng z wymuszonym WGS84 na płaski układ PUWG 1992 (EPSG:2180).
+- **Ewidencja Gruntów (KIEG):** Podział i kontury, budynki.
+- **Uzbrojenie Terenu (KIUT):** Warstwy infrastrukturalne podziemne i nadziemne ciągnięte z powiatów. Modyfikowane wymuszeniem 150dpi High-Resolution do smartfonów.
+- **Usługa Lokalizacji (ULDK):** Zamienia formatki XY na kształty WKT Poligon dla analiz GDOŚ, tłumaczy geometrię i dostarcza wyszukiwarkę.
+- **Numeryczny Model Terenu (NMT):** Baza rastrowa wyciągająca wysokość za pomocą `GetFeatureInfo` dla wskazanego zapytania przestrzennego.
 
-### B. Generalna Dyrekcja Ochrony Środowiska (GDOŚ) - Usługi SDI
-- **Formy Ochrony Przyrody (WMS / WFS):**
-  - **Wizualizacja (WMS):** Kafelkowe serwowanie obrazów do swobodnego przeglądania mapy.
-  - **Analityka Przestrzenna (WFS):** Skrypt wykorzystuje Web Feature Service jako silnik zapytań wektorowych. Przekazuje on obrys WKT z ULDK do GDOŚ przez `CQL_FILTER=INTERSECTS(geom, ...)` celem sprawdzenia kolizji.
-  - Parki Narodowe i Krajobrazowe
-  - Ptasie i Siedliskowe obszary Natura 2000 (OSO/SOO)
-  - Rezerwaty Przyrody, Pomniki Przyrody
-  - Użytki Ekologiczne i Zespoły Przyrodniczo-Krajobrazowe
-  - Obszary Chronionego Krajobrazu
-  - Stanowiska Dokumentacyjne
+### B. Generalna Dyrekcja Ochrony Środowiska (GDOŚ)
+- Silnik mapowy z warstwami Natura 2000, Parkami, Rezerwatami jako estetyczne tło na mapie.
+- **WFS Spatial Query:** Analizy geometryczne i przestrzenne (intersects) by poinformować o "Kolidujących formach ochrony" z prawnego punktu widzenia nałożonych na poligon ewidencyjny.
 
-### C. Zewnętrzne Bazy Alternatywne
-- **OpenStreetMap:** Poprzez serwery bazowe (Mapnik) oraz silnik geokodujący Nominatim.
-- **Google / Esri Server:** Warstwy komercyjne zdjęć satelitarnych wyciągane przez bezpośrednie zapytania do Endpointów serwerów kafelkowych XYZ.
+### C. Główny Urząd Nadzoru Budowlanego (GUNB)
+- **Wyszukiwarka RWDZ:** Rejestr wniosków, decyzji i zgłoszeń udostępniający inwestorom wykaz działań dla danego terenu (udostępniany modularnie bezpiecznym bypassem CAPTCHA-proof).
+
+### D. Zewnętrzne Bazy
+- OpenStreetMap, Google Maps, Esri (Mapy podkładowe XYZ).
 
 ## 7. Ograniczenia i Założenia Systemowe (Disclaimer)
-Twórcy oparli funkcję na specyfice polskiego modelu agregacji danych KIEG/KIUT: system centralnego WMS rządu zadaje kaskadowe w locie zapytania do rozsianych serwerów strefowych setek ośrodków szczebla powiatowego (PODGiK).
-Oznacza to, że widoczność sieci (lub jej brak) bezpośrednio odzwierciedla elektroniczny, realny stan cyfryzacji bazy w konkretnym starostwie. Brak kreski dla sieci na mapie nie oznacza prawnej lub fizycznej nieobecności infrastruktury pod ziemią, o czym użytkownik jest trwale informowany na dedykowanym panelu UI.
-
-Podobnie w przypadku wyników "Analizy Ograniczeń Środowiskowych" – system raportuje bezpośrednie kolizje z prawnymi, wielkopowierzchniowymi strefami chronionymi wyłącznie z rejestru form ochrony przyrody państwowego GDOŚ. Rozwiązanie to nie zwalnia z weryfikacji Miejscowych Planów Zagospodarowania Przestrzennego (MPZP) ani ewidencji miejskich konserwatorów zabytków. Odpowiedni Disclaimer (zastrzeżenie) jest na stałe dołączony do okna wyników analizy chłonnościowej dla bezpieczeństwa użytkownika.
+Twórcy oparli funkcję na specyfice modelu agregacji państwa. KIUT uzależniony jest od lokalnych starostw - brak kreski sieci nie oznacza fizycznego jej braku w ziemi (szczególnie w Polsce, w starszych, niecyfryzowanych rejonach). System GDOŚ z kolei opiera się na granicach przyrodniczych, ale nie zwalnia to nigdy użytkownika docelowego z analizy gminnych Miejscowych Planów (MPZP), o czym jest on na bieżąco powiadamiany podczas korzystania z Asystenta poprzez dedykowane zastrzeżenia prawne wbudowane w layout narzędzia.
