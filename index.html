@@ -1888,14 +1888,36 @@
 
                         const gunbEl = document.getElementById('pp-gunb-content');
                         
-                        // Helper do generowania linku do oficjalnej wyszukiwarki
-                        const generateGunbLink = (teryt) => {
-                            // Format TERYT: WWPPGG_R.OOOO.NR (np. 142010_2.0052.305/2)
+                        // Helper do uruchamiania wyszukiwarki GUNB za pomocą POST
+                        window.submitGunbForm = (teryt) => {
                             const parts = teryt.split('.');
-                            if (parts.length < 3) return `https://wyszukiwarka.gunb.gov.pl/`;
-                            const organ = parts[0] + '.' + parts[1]; // WWPPGG_R.OOOO
-                            const parcel = parts[2]; // NR
-                            return `https://wyszukiwarka.gunb.gov.pl/?ew_organ=${organ}&ew_parcel=${encodeURIComponent(parcel)}`;
+                            if (parts.length < 3) {
+                                window.open('https://wyszukiwarka.gunb.gov.pl/', '_blank');
+                                return;
+                            }
+                            const organ = parts[0] + '.' + parts[1];
+                            const parcel = parts[2];
+                            
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = 'https://wyszukiwarka.gunb.gov.pl/';
+                            form.target = '_blank';
+                            
+                            const addInput = (name, value) => {
+                                const i = document.createElement('input');
+                                i.type = 'hidden'; i.name = name; i.value = value;
+                                form.appendChild(i);
+                            };
+                            
+                            addInput('ew_organ', organ);
+                            addInput('ew_parcel', parcel);
+                            addInput('invest_purpose', 'all');
+                            addInput('invest', 'all');
+                            form.appendChild(document.createElement('input')).type = 'submit'; // Submit button
+                            
+                            document.body.appendChild(form);
+                            form.submit();
+                            document.body.removeChild(form);
                         };
 
                         if (gunbResult === 'loading') {
@@ -1911,7 +1933,7 @@
                                     <div style="font-size: 12px; margin-bottom: 10px; line-height: 1.4; color: var(--text-muted);">
                                         <i class="fa fa-circle-info" style="color:var(--blue)"></i> ${msg} Skorzystaj z oficjalnego formularza poniżej:
                                     </div>
-                                    <a href="${generateGunbLink(dataUldk.teryt)}" target="_blank" class="btn-check" style="display: block; text-align: center; text-decoration: none; padding: 10px; background: var(--blue); color: #fff; border-radius: 4px; font-weight: bold; font-size: 13px; transition: 0.2s;">
+                                    <a href="#" onclick="window.submitGunbForm('${dataUldk.teryt}'); return false;" class="btn-check" style="display: block; text-align: center; text-decoration: none; padding: 10px; background: var(--blue); color: #fff; border-radius: 4px; font-weight: bold; font-size: 13px; transition: 0.2s;">
                                         <i class="fa fa-external-link"></i> Sprawdź w rejestrze GUNB
                                     </a>
                                     <div style="font-size: 10px; margin-top: 8px; text-align: center; color: var(--text-muted);">
@@ -1979,8 +2001,12 @@
         // ASYNC ORCHESTRATOR FUNCTIONS
         // ════════════════════════════════════════════════
         async function checkGdosConstraints(geomWkt) {
-            const wkt = geomWkt ? geomWkt.replace(/^SRID=\d+;/, '') : null;
+            let wkt = geomWkt ? geomWkt.replace(/^SRID=\d+;/, '') : null;
             if (!wkt || (!wkt.startsWith("POLYGON") && !wkt.startsWith("MULTIPOLYGON"))) return { status: 'brak' };
+            
+            // GDOŚ WFS 2.0.0 w układzie EPSG:2180 oczekuje kolejności Northing, Easting (Y X). 
+            // Ponieważ ULDK zwraca X Y (Easting, Northing), musimy odwrócić współrzędne w WKT.
+            wkt = wkt.replace(/([0-9.]+) ([0-9.]+)/g, '$2 $1');
             
             const gdosLayersStr = 'GDOS:ParkiNarodowe,GDOS:ParkiKrajobrazowe,GDOS:Rezerwaty,GDOS:ObszarySpecjalnejOchrony,GDOS:SpecjalneObszaryOchrony,GDOS:ObszaryChronionegoKrajobrazu,GDOS:PomnikiPrzyrody,GDOS:UzytkiEkologiczne,GDOS:StanowiskaDokumentacyjne,GDOS:ZespolyPrzyrodniczoKrajobrazowe';
             const layers = gdosLayersStr.split(',');
