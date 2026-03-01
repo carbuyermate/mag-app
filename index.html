@@ -1198,7 +1198,7 @@
                                 <div class="ovr-dot" style="background:#fb923c"></div>
                                 <span class="ovr-name">Numery działek</span>
                             </div>
-                            <label class="toggle"><input type="checkbox" id="ovr-numery" checked><span
+                            <label class="toggle"><input type="checkbox" id="ovr-numery"><span
                                     class="toggle-slider"></span></label>
                         </div>
                         <div class="ovr-item">
@@ -1209,14 +1209,14 @@
                             <label class="toggle"><input type="checkbox" id="ovr-budynki"><span
                                     class="toggle-slider"></span></label>
                         </div>
-                        <div class="ovr-item">
+                        <!-- <div class="ovr-item">
                             <div class="ovr-item-left">
                                 <div class="ovr-dot" style="background:#eab308"></div>
                                 <span class="ovr-name">Pozwolenia na budowę (GUNB)</span>
                             </div>
                             <label class="toggle"><input type="checkbox" id="ovr-gunb"><span
                                     class="toggle-slider"></span></label>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -1895,7 +1895,7 @@
                             if (parts.length < 3) return `https://wyszukiwarka.gunb.gov.pl/`;
                             const organ = parts[0] + '.' + parts[1]; // WWPPGG_R.OOOO
                             const parcel = parts[2]; // NR
-                            return `https://wyszukiwarka.gunb.gov.pl/wyniki/1/ew_organ=${organ}&ew_parcel=${encodeURIComponent(parcel)}`;
+                            return `https://wyszukiwarka.gunb.gov.pl/?ew_organ=${organ}&ew_parcel=${encodeURIComponent(parcel)}`;
                         };
 
                         if (gunbResult === 'loading') {
