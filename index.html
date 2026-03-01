@@ -1772,10 +1772,9 @@
         // ULDK – CLICK TO IDENTIFY PARCEL
         // ════════════════════════════════════════════════
         async function fetchGunbData(terytId) {
-            const proxy = "https://corsproxy.io/?";
             // API GUNB wymaga usunięcia fragmentu np. .AR_1. i zostawienia 146501_1.0001.123
             const formattedTeryt = terytId.replace(/\.AR_\d+/i, '');
-            const url = `${proxy}https://wyszukiwarka.gunb.gov.pl/api/projects/?parcel_number=${encodeURIComponent(formattedTeryt)}`;
+            const url = `https://wyszukiwarka.gunb.gov.pl/api/projects/?parcel_number=${encodeURIComponent(formattedTeryt)}`;
 
             try {
                 const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
@@ -1866,12 +1865,12 @@
                                 if (res.investor && res.investor.trim() !== '' && res.investor !== '***') {
                                     inwestor = res.investor;
                                 }
-                                listHtml += `<div class="pp-box" style="margin-top:10px;">
-                                    <div style="font-weight:bold; color:#fff; font-size:13px; margin-bottom:4px;">${res.intent_type || 'Zamierzenie budowlane'}</div>
-                                    <div style="font-size:11px; margin-bottom:2px;"><strong style="color:var(--text-sec)">Status:</strong> <span style="color:#d1d5db">${res.decision_status || res.application_status || 'W trakcie rozpatrywania'}</span></div>
-                                    <div style="font-size:11px; margin-bottom:2px;"><strong style="color:var(--text-sec)">Wniosek/Decyzja:</strong> <span style="color:#d1d5db">${res.application_number || res.decision_number || 'Brak'}</span></div>
-                                    <div style="font-size:11px; margin-bottom:2px;"><strong style="color:var(--text-sec)">Inwestor:</strong> <span style="color:#d1d5db">${inwestor}</span></div>
-                                    <div style="font-size:11px;"><strong style="color:var(--text-sec)">Data wpływu:</strong> <span style="color:#d1d5db">${dataData}</span></div>
+                                listHtml += `<div class="pp-box" style="margin-top:10px; color:#ffffff;">
+                                    <div style="font-weight:bold; font-size:13px; margin-bottom:4px;">${res.intent_type || 'Zamierzenie budowlane'}</div>
+                                    <div style="font-size:11px; margin-bottom:2px;"><strong>Status:</strong> <span>${res.decision_status || res.application_status || 'W trakcie rozpatrywania'}</span></div>
+                                    <div style="font-size:11px; margin-bottom:2px;"><strong>Wniosek/Decyzja:</strong> <span>${res.application_number || res.decision_number || 'Brak'}</span></div>
+                                    <div style="font-size:11px; margin-bottom:2px;"><strong>Inwestor:</strong> <span>${inwestor}</span></div>
+                                    <div style="font-size:11px;"><strong>Data wpływu:</strong> <span>${dataData}</span></div>
                                 </div>`;
                             });
                             gunbEl.innerHTML = listHtml;
