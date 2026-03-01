@@ -1553,15 +1553,6 @@
                     </div>
                 </div>
 
-                <!-- Sekcja: Inwestycje w okolicy (GUNB) -->
-                <div class="pp-section">
-                    <div class="pp-sec-header"><i class="fa fa-hard-hat"></i> Wnioski i Pozwolenia (GUNB)</div>
-                    <div class="pp-sec-content">
-                        <div id="pp-gunb-content">
-                            <span class="loading-text">Weryfikacja bazy RWDZ...</span>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Sekcja 3: Sprawy urzędowe -->
                 <div class="pp-section">
@@ -1626,6 +1617,22 @@
                                 (Gov)</a>
                         </div>
 
+                    </div>
+                </div>
+
+                <!-- Sekcja 5: Wnioski i Pozwolenia (GUNB) -->
+                <div class="pp-section" style="border-color: var(--blue);">
+                    <div class="pp-sec-header" style="background: rgba(56, 139, 253, 0.15); color: var(--blue);"><i
+                            class="fa fa-hard-hat"></i> 5. Wnioski i Pozwolenia (GUNB)</div>
+                    <div class="pp-sec-content">
+                        <div class="pp-step-desc" style="margin-bottom: 10px;">
+                            Sprawdź oficjalną bazę Rejestru Wniosków, Decyzji i Zgłoszeń (RWDZ) prowadzoną przez Główny
+                            Urząd Nadzoru Budowlanego, aby dowiedzieć się o planowanych i realizowanych inwestycjach
+                            budowlanych na tej działce.
+                        </div>
+                        <a href="https://wyszukiwarka.gunb.gov.pl/" target="_blank" class="pp-cta primary"
+                            style="background: var(--blue);"><i class="fa fa-external-link"></i> Przejdź do wyszukiwarki
+                            GUNB</a>
                     </div>
                 </div>
 
@@ -1857,24 +1864,7 @@
         // ════════════════════════════════════════════════
         // ULDK – CLICK TO IDENTIFY PARCEL
         // ════════════════════════════════════════════════
-        async function fetchGunbData(terytId) {
-            // API GUNB (RWDZ) często zwraca 404 lub 401 (wymaga autoryzacji/CAPTCHA).
-            // Używamy AllOrigins jako proxy, ale przygotowujemy się na brak danych.
-            const formattedTeryt = terytId.replace(/\.AR_\d+/i, '');
-            const targetUrl = `https://wyszukiwarka.gunb.gov.pl/api/projects/?parcel_number=${encodeURIComponent(formattedTeryt)}`;
-            const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
-            try {
-                // Skracamy timeout do 4s, aby nie blokować interfejsu przy braku odpowiedzi
-                const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
-                if (!response.ok) return { error: true, code: response.status };
-                const data = await response.json();
-                return { status: 'success', results: data.results || [] };
-            } catch (error) {
-                console.warn("Błąd zapytania do RWDZ (GUNB):", error.message);
-                return { error: true, message: error.message };
-            }
-        }
 
         async function fetchNmtData(x_north, y_east) {
             const url = `https://services.gugik.gov.pl/nmt/?request=GetHByXY&x=${x_north}&y=${y_east}`;
@@ -1930,7 +1920,6 @@
                     };
 
                     let gdosResult = 'loading';
-                    let gunbResult = 'loading';
                     let nmtResult = 'loading';
 
                     const updateUI = () => {
@@ -1969,58 +1958,6 @@
                             gdosEl.innerHTML = `<div style="color:var(--danger)"><i class="fa fa-circle-xmark"></i> Błąd serwera GDOŚ. (Timeout)</div>`;
                         }
 
-                        const gunbEl = document.getElementById('pp-gunb-content');
-
-                        const terytParts = dataUldk.teryt.split('.');
-                        const organ = terytParts.length > 2 ? terytParts[0] + '.' + terytParts[1] : '';
-                        const parcel = terytParts.length > 2 ? terytParts[2] : '';
-
-                        if (gunbResult === 'loading') {
-                            gunbEl.innerHTML = '<span class="loading-text"><i class="fa fa-spinner spin"></i> Pobieranie danych z rejestru RWDZ...</span>';
-                        } else if (gunbResult?.error || !gunbResult?.results || gunbResult.results.length === 0) {
-                            const isError = gunbResult?.error;
-                            const msg = isError
-                                ? 'Serwer GUNB odrzucił połączenie (wymagana weryfikacja CAPTCHA).'
-                                : 'Brak bezpośrednich wyników w API dla tej działki.';
-
-                            gunbEl.innerHTML = `
-                                <div style="padding: 12px; border-radius: 6px; background: rgba(56, 139, 253, 0.1); border: 1px solid rgba(56, 139, 253, 0.2); color: #fff;">
-                                    <div style="font-size: 12px; margin-bottom: 10px; line-height: 1.4; color: var(--text-muted);">
-                                        <i class="fa fa-circle-info" style="color:var(--blue)"></i> ${msg} Skorzystaj z oficjalnego formularza poniżej:
-                                    </div>
-                                    <form method="POST" action="https://wyszukiwarka.gunb.gov.pl/" target="_blank" style="margin:0;">
-                                        <input type="hidden" name="ew_organ" value="${organ}">
-                                        <input type="hidden" name="ew_parcel" value="${parcel}">
-                                        <input type="hidden" name="invest_purpose" value="all">
-                                        <input type="hidden" name="invest" value="all">
-                                        <input type="hidden" name="submit" value="submit">
-                                        <button type="submit" class="btn-check" style="width: 100%; display: block; text-align: center; border: none; cursor: pointer; padding: 10px; background: var(--blue); color: #fff; border-radius: 4px; font-weight: bold; font-size: 13px; transition: 0.2s;">
-                                            <i class="fa fa-external-link"></i> Sprawdź w rejestrze GUNB
-                                        </button>
-                                    </form>
-                                    <div style="font-size: 10px; margin-top: 8px; text-align: center; color: var(--text-muted);">
-                                        (Wymaga przepisania kodu z obrazka na stronie urzędu)
-                                    </div>
-                                </div>`;
-                        } else if (gunbResult?.results?.length > 0) {
-                            let listHtml = '';
-                            gunbResult.results.forEach(res => {
-                                const dataData = Array.isArray(res.date) ? res.date[0] : (res.date || 'brak daty');
-                                let inwestor = 'Osoba fizyczna (dane ukryte)';
-                                if (res.investor && res.investor.trim() !== '' && res.investor !== '***') {
-                                    inwestor = res.investor;
-                                }
-                                listHtml += `<div class="pp-box" style="margin-top:10px; color:#ffffff;">
-                                    <div style="font-weight:bold; font-size:13px; margin-bottom:4px;">${res.intent_type || 'Zamierzenie budowlane'}</div>
-                                    <div style="font-size:11px; margin-bottom:2px;"><strong>Status:</strong> <span>${res.decision_status || res.application_status || 'W trakcie rozpatrywania'}</span></div>
-                                    <div style="font-size:11px; margin-bottom:2px;"><strong>Wniosek/Decyzja:</strong> <span>${res.application_number || res.decision_number || 'Brak'}</span></div>
-                                    <div style="font-size:11px; margin-bottom:2px;"><strong>Inwestor:</strong> <span>${inwestor}</span></div>
-                                    <div style="font-size:11px;"><strong>Data wpływu:</strong> <span>${dataData}</span></div>
-                                </div>`;
-                            });
-                            gunbEl.innerHTML = listHtml;
-                        }
-
 
                         document.getElementById('parcel-panel').classList.add('open');
 
@@ -2034,15 +1971,13 @@
                     updateUI(); // renders initial "ładowanie..." statuses
                     setStatus(`Działka: ${dataUldk.parcel}`, 'ok');
 
-                    // KROK 2: Analityka przestrzenna GDOŚ, Rejestry GUNB rwdz i NMT
+                    // KROK 2: Analityka przestrzenna GDOŚ, Rejestry NMT
                     Promise.allSettled([
                         checkGdosConstraints(dataUldk.geomWkt),
-                        fetchGunbData(dataUldk.teryt),
                         fetchNmtData(y_2180, x_2180) // NMT API oczekuje X=Północ (Northing), Y=Wschód (Easting)
                     ]).then(results => {
                         gdosResult = results[0].status === 'fulfilled' ? results[0].value : { error: true };
-                        gunbResult = results[1].status === 'fulfilled' ? results[1].value : { error: true };
-                        nmtResult = results[2].status === 'fulfilled' ? results[2].value : { error: true };
+                        nmtResult = results[1].status === 'fulfilled' ? results[1].value : { error: true };
                         updateUI(); // refreshes UI with final data
                     });
 
