@@ -21,8 +21,8 @@ Praca z oficjalnymi portalem Geoportal.gov.pl na urządzeniach mobilnych jest wy
 
 ## 4. Czym różni się od rządowych i komercyjnych portali rynkowych?
 - **Brak przeładowania funkcjami (Over-engineering):** Zamiast tysięcy opcji analitycznych, narzędzi pomiarowych i warstw historycznych (jak w QGIS czy pełnym Geoportalu), MAG stawia na ascetyczne minimum: "Pokaż mi, gdzie jestem (GPS), daj mi adres, nałóż działki, uzbrojenie, strefy ekologiczne i podaj telefon do urzędu".
-- **Bezpieczeństwo i prywatność:** Aplikacja działa głównie w przeglądarce klienta (Client-Side). Nie śledzi ruchów użytkownika ani nie loguje zapytań na prywatnych serwerach. Komunikuje się bezpośrednio (P2P) z serwerami polskiego rządu wszędzie tam, gdzie urzędy udostępniają otwarty nagłówek CORS (GDOŚ, GUGiK).
-- **Hybrydowy Backend Proxy dla GUNB:** Ponieważ system RWDZ (GUNB) nie wspiera bezpośrednich zapytań z przeglądarki, aplikacja korzysta z Twojego własnego, bezpiecznego serwera Node.js (Render), który pośredniczy tylko w tym jednym zapytaniu. Gwarantuje to 100% dostarczalności danych o pozwoleniach na budowę bez polegania na zewnętrznych, płatnych usługach proxy.
+- **Bezpieczeństwo i prywatność:** Aplikacja działa wyłącznie w przeglądarce klienta (Client-Side). Nie korzysta z żadnych baz pośredniczących (backendu), nie śledzi ruchów użytkownika ani nie loguje zapytań na prywatnych serwerach. Komunikuje się bezpośrednio (P2P) z serwerami polskiego rządu. Wymusza prywatność.
+- **Bypass CORS dla GUNB (AllOrigins):** Ponieważ system RWDZ (GUNB) nie wspiera bezpośrednich zapytań z przeglądarki, aplikacja wykorzystuje darmowe, publiczne proxy `api.allorigins.win`. Pozwala to na błyskawiczne pobieranie danych na hostingu statycznym (Static Site) bez konieczności utrzymywania własnego serwera backendowego.
 
 ## 5. Kluczowe Funkcje Aplikacji
 - ** Geolokalizacja GPS na żywo:** Przycisk centrowania kamery mapy bezpośrednio na fizycznej lokalizacji użytkownika stojącego w szczerym polu.

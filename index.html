@@ -1777,8 +1777,9 @@
         async function fetchGunbData(terytId) {
             // API GUNB wymaga usunięcia fragmentu np. .AR_1. i zostawienia 146501_1.0001.123
             const formattedTeryt = terytId.replace(/\.AR_\d+/i, '');
-            // Odpytujemy nasz własny backend proxy oparty o Express w pliku server.js by ominąć CORS
-            const url = `/api/gunb?parcel_number=${encodeURIComponent(formattedTeryt)}`;
+            // Używamy publicznego, szybkiego proxy AllOrigins, aby ominąć CORS na hostingu statycznym
+            const targetUrl = `https://wyszukiwarka.gunb.gov.pl/api/projects/?parcel_number=${encodeURIComponent(formattedTeryt)}`;
+            const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
             try {
                 const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
