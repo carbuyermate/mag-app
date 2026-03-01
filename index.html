@@ -1922,9 +1922,9 @@
 
             const sadMapQ = `Sąd Rejonowy Wydział Ksiąg Wieczystych ${isCity ? cleanPowiat : powName.toLowerCase()}`;
 
-            // Podepnij wygenerowane linki Google Maps
-            document.getElementById('pp-urzad-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(urzadMapQ)}`;
-            document.getElementById('pp-sad-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sadMapQ)}`;
+            // Podepnij wygenerowane linki pod inteligentne wyszukiwanie Google (zamiast sztywnego Google Maps, które gubi się przy przymiotnikach powiatowych)
+            document.getElementById('pp-urzad-link').href = `https://www.google.com/search?q=${encodeURIComponent(urzadMapQ)}`;
+            document.getElementById('pp-sad-link').href = `https://www.google.com/search?q=${encodeURIComponent(sadMapQ)}`;
 
             // Helper z generowaniem Kodu Wydziału Sądowego z teryt
             const prefixLookup = {
