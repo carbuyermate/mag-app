@@ -22,7 +22,7 @@ Praca z oficjalnymi portalem Geoportal.gov.pl na urządzeniach mobilnych jest wy
 ## 4. Czym różni się od rządowych i komercyjnych portali rynkowych?
 - **Brak przeładowania funkcjami (Over-engineering):** Zamiast tysięcy opcji analitycznych, narzędzi pomiarowych i warstw historycznych (jak w QGIS czy pełnym Geoportalu), MAG stawia na ascetyczne minimum: "Pokaż mi, gdzie jestem (GPS), daj mi adres, nałóż działki, uzbrojenie, strefy ekologiczne i podaj telefon do urzędu".
 - **Bezpieczeństwo i prywatność:** Aplikacja działa wyłącznie w przeglądarce klienta (Client-Side). Nie korzysta z żadnych baz pośredniczących (backendu), nie śledzi ruchów użytkownika ani nie loguje zapytań na prywatnych serwerach. Komunikuje się bezpośrednio (P2P) z serwerami polskiego rządu. Wymusza prywatność.
-- **Bypass CORS dla lokalnego użytku:** Unikalne rozwiązanie wbudowanego dynamicznego proxy (`corsproxy.io`) pozwala uruchamiać potężne skrypty analityczne bezpośrednio z pliku na pulpicie (lokalnie), omijając zabezpieczenia Cross-Origin, które normalnie blokują komunikację z państwowymi API w przypadku braku certyfikowanego serwera.
+- **Bezpośrednie połączenie API (Brak CORS proxy):** W przeciwieństwie do wielu nieoficjalnych narzędzi, aplikacja odpytuje serwery GUGiK, GDOŚ i GUNB całkowicie bezpośrednio z przeglądarki użytkownika. Nie używamy żadnych bramek typu CORS Proxy, co gwarantuje pełne bezpieczeństwo danych (brak "pośredników" podsłuchujących ruch) i maksymalną możliwą prędkość działania (Ping-to-Server).
 
 ## 5. Kluczowe Funkcje Aplikacji
 - ** Geolokalizacja GPS na żywo:** Przycisk centrowania kamery mapy bezpośrednio na fizycznej lokalizacji użytkownika stojącego w szczerym polu.
@@ -37,7 +37,7 @@ Praca z oficjalnymi portalem Geoportal.gov.pl na urządzeniach mobilnych jest wy
 - ** Optymalizacja czytelności wektorów (DPI Hack):** Wymuszenie na serwerach rządowych renderingu z High-DPI (150dpi) oraz nad-próbkowanie obrazu kafelków WMS (tileSize: 512, zoomOffset: -1) celem pogrubienia mikroskopijnych, 1-pikselowych linii ewidencyjnych i infrastrukturalnych, poprawiając drastycznie czytelność pod słońcem na ekranie roboczym.
 
 ## 6. Architektura i Źródła Danych (API & Bazy)
-Aplikacja to czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6). Moduł mapowy to otwartoźródłowy **Leaflet.js (v1.9.4)**. Translacja układów współrzędnych realizowana przez bibliotekę matematyczną **Proj4js**.
+Aplikacja to czysty frontend (HTML5, Vanilla CSS3, Vanilla JS ES6). Moduł mapowy to otwartoźródłowy **Leaflet.js (v1.9.4)**. Translacja układów współrzędnych realizowana przez bibliotekę matematyczną **Proj4js**. Brak komunikacji przez serwery pośredniczące Proxy, żądania trafiają z urządzenia wprost do urzędów.
 
 Pobierane zbiory danych poprzez standardy OGC (WMS / REST API):
 
