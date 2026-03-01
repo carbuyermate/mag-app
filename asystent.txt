@@ -29,12 +29,13 @@ Praca z oficjalnym portalem Geoportal.gov.pl na urządzeniach mobilnych jest w t
 ## 5. Kluczowe Funkcje Aplikacji
 - ** Geolokalizacja GPS na żywo:** Pozycjonowanie z wyświetlaniem rzeczywistej dokładności pomiarowej (w metrach) pobieranej z odbiornika satelitarnego telefonu.
 - ** Inteligentna Wyszukiwarka Adresów:** System autouzupełniania bazujący wpierw na precyzyjnym państwowym API (ULDK GUGiK), a jako fallback – na silniku Nominatim (OSM).
-- ** Panel Informacyjny Działki w Czasie Rzeczywistym:**
-  - **Lokalizacja i TERYT:** Pełny adres geodezyjny.
-  - **Wysokość terenu (NMT):** Odczyt wysokości metrach nad poziomem morza w klikniętym punkcie z dokładnego ukształtowania GUGiK.
-  - **Ograniczenia Środowiskowe (GDOŚ):** Automatyczna kalkulacja kolizji (intersekcji obrysu geometrii działki) ze wszystkimi państwowymi formami ochrony środowiska za pomocą WFS `CQL_FILTER`.
-  - **Wnioski i Pozwolenia (GUNB):** Zautomatyzowany łącznik wysyłający użytkownika wprost do państwowego rejestru RWDZ w celu sprawdzenia wydanych decyzi i toczących się postępowań dla danej lokalizacji.
-  - **Sprawy Urzędowe i Smart Links:** Wyliczenia właściwości sądowej Księgi Wieczystej wraz z gotowymi odnośnikami do Google Maps z nawigacją do Starostwa (Wydział Geodezji) i Sądu. Kierowanie do państwowego portalu KW.
+- ** Panel Informacyjny Działki w Czasie Rzeczywistym (Kliknięcie parceli):**
+  - **[Nagłówek] TERYT, Geometria i Wysokość terenu (NMT):** Dokładny adres, numer ewidencyjny oraz pobierany metodą `GetFeatureInfo` odczyt wysokości w metrach nad poziomem z dokładnego ukształtowania GUGiK.
+  - **1. Lokalizacja administracyjna:** Odczyt precyzyjnego podziału administracyjnego na szczeblu jednostki (Województwo, Powiat, Gmina, Miejscowość/Obręb).
+  - **2. Ograniczenia i Środowisko (GDOŚ):** Automatyczna kalkulacja kolizji (intersekcji obrysu geometrii działki z WFS) ze wszystkimi państwowymi formami ochrony środowiska GDOŚ. Zwraca czerwoną alertBox przy nakładaniu się terenów.
+  - **3. Sprawy Urzędowe i Księgi Wieczyste (Smart Links):** Wyliczenia właściwości sądowej Księgi Wieczystej wraz z generowaniem 4-znakowego prefiksu kodu sądu dla klikniętego terenu. Gotowe odnośniki "Smart Links" do szybkiej nawigacji z wykorzystaniem Google Maps prosto do Urzędu Geodezji oraz Sądu.
+  - **4. Jak sprawdzić właściciela online?:** Integracyjna sekcja edukacyjna typu Know-How przeprowadzająca inwestora krok po kroku od poznania pełnego numeru Księgi (np. poprzez komercyjne bazy afiliacyjne po samej działce) aż po bezpłatne otwarcie i sprawdzenie szczegółów (kto jest właścicielem, wielkość hipoteki/zadłużeń) w Ekstranecie EKW Polskiego Ministerstwa.
+  - **5. Wnioski i Pozwolenia (GUNB):** Zautomatyzowany łącznik wysyłający użytkownika wprost do państwowego rejestru RWDZ w celu sprawdzenia wydanych decyzi o warunkach zabudowy, zatwierdzonych projektów i toczących się postępowań dla sąsiedztwa inwestycji.
 
 ## 6. Co dokładnie sprawdzisz i włączysz na mapie? (Dostępne Warstwy)
 Aplikacja posiada boczne menu z przełącznikami (toggles), pozwalającymi swobodnie włączać i wyłączać poszczególne pakiety danych nałożone na mapę:
