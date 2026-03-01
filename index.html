@@ -1765,19 +1765,22 @@
                 const [x_2180, y_2180] = proj4("EPSG:4326", "EPSG:2180", [lng, lat]);
 
                 // KROK 1: ULDK
-                const uldkUrl = `https://uldk.gugik.gov.pl/?request=GetParcelByXY&xy=${x_2180},${y_2180}&result=parcel,region,teryt,geom_wkt`;
+                const uldkUrl = `https://uldk.gugik.gov.pl/?request=GetParcelByXY&xy=${x_2180},${y_2180}&result=parcel,teryt,wojewodztwo,powiat,gmina,obreb,geom_wkt`;
                 const respUldk = await fetch(uldkUrl, { signal: AbortSignal.timeout(5000) });
                 const textUldk = await respUldk.text();
                 const lines = textUldk.trim().split('\n');
                 
-                // Response: code\nparcel|region|teryt|POLYGON(...)
+                // Response: code\nparcel|teryt|wojewodztwo|powiat|gmina|obreb|POLYGON(...)
                 if (lines[0] === '0' && lines[1]) {
                     const parts = lines[1].split('|');
                     const dataUldk = {
                         parcel: parts[0] || '—',
-                        region: parts[1] || '—',
-                        teryt: parts[2] || '—',
-                        geomWkt: parts[3] ? parts.slice(3).join('|') : null,
+                        teryt: parts[1] || '—',
+                        woj: parts[2] || '—',
+                        pow: parts[3] || '—',
+                        gmi: parts[4] || '—',
+                        obr: parts[5] || '—',
+                        geomWkt: parts[6] ? parts.slice(6).join('|') : null,
                         lat, lng
                     };
 
@@ -1787,7 +1790,7 @@
                         document.getElementById('pp-parcel-no').textContent = dataUldk.parcel;
                         document.getElementById('pp-teryt-id').textContent = dataUldk.teryt;
                         
-                        populateAdminAndCourt(dataUldk.teryt, dataUldk.region);
+                        populateAdminAndCourt(dataUldk);
 
                         const gdosEl = document.getElementById('pp-gdos-content');
                         if (gdosResult === 'loading') {
@@ -1884,22 +1887,17 @@
             document.getElementById('parcel-panel').classList.remove('open');
         }
 
-        function populateAdminAndCourt(teryt, regionText) {
-            const wojMatch = regionText.match(/województwo ([^,]+)/i);
-            const powMatch = regionText.match(/powiat ([^,]+)/i);
-            const gmiMatch = regionText.match(/gmina ([^,]+)/i);
-            const obrMatch = regionText.match(/obręb(?: ewidencyjny)? ([^,]+)/i);
+        function populateAdminAndCourt(data) {
+            const powName = data.pow ? data.pow.trim() : "Właściwy powiat";
+            const gmiName = data.gmi ? data.gmi.trim() : "Właściwa gmina";
 
-            const powName = powMatch ? powMatch[1].trim() : "Właściwy powiat";
-            const gmiName = gmiMatch ? gmiMatch[1].trim() : "Właściwa gmina";
-
-            document.getElementById('pp-woj').textContent = wojMatch ? wojMatch[1].trim() : "---";
+            document.getElementById('pp-woj').textContent = data.woj ? data.woj.trim() : "---";
             document.getElementById('pp-pow').textContent = powName;
             document.getElementById('pp-gmi').textContent = gmiName;
-            document.getElementById('pp-obr').textContent = obrMatch ? obrMatch[1].trim() : "---";
+            document.getElementById('pp-obr').textContent = data.obr ? data.obr.trim() : "---";
 
             const isCity = powName.toLowerCase().startsWith('m.');
-            let cleanPowiat = powName.replace(/^m\.\s*/i, '');
+            let cleanPowiat = powName.replace(/^m\.\s*/i, '').replace(/^powiat\s+/i, '');
             // Capitalize first letter
             cleanPowiat = cleanPowiat.charAt(0).toUpperCase() + cleanPowiat.slice(1);
             
@@ -1917,11 +1915,11 @@
                 '14': 'WA', '16': 'OP', '18': 'RZ', '20': 'BI', '22': 'GD', '24': 'KA',
                 '26': 'KI', '28': 'OL', '30': 'PO', '32': 'SZ'
             };
-            const wojCode = teryt ? teryt.substring(0,2) : '';
+            const wojCode = data.teryt ? data.teryt.substring(0,2) : '';
             const p1 = prefixLookup[wojCode] || 'XY';
-            const numParse = parseInt(teryt ? teryt.substring(2,4) : '') || 1;
+            const numParse = parseInt(data.teryt ? data.teryt.substring(2,4) : '') || 1;
             const num = (numParse % 9) + 1;
-            const letterParse = parseInt(teryt ? teryt.substring(4,6) : '') || 0;
+            const letterParse = parseInt(data.teryt ? data.teryt.substring(4,6) : '') || 0;
             const letterZ = String.fromCharCode(65 + (letterParse % 26));
             document.getElementById('pp-sad-kod').textContent = `${p1}${num}${letterZ}`;
         }
