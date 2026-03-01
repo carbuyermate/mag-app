@@ -1485,13 +1485,15 @@
                         <div style="color:#fff; font-weight:600; margin-bottom:5px;">Jednostka właściwa ewidencji:</div>
                         <div class="pp-box">
                             <i class="fa fa-landmark" style="color:var(--text-muted)"></i> <span id="pp-urzad-nazwa" style="color:#fff">---</span><br>
-                            <div style="font-size:11px; margin-top:4px;"><i class="fa fa-location-dot"></i> <span id="pp-urzad-adres">Wydział Geodezji i Kartografii</span></div>
+                            <div style="font-size:11px; margin-top:4px; margin-bottom:10px;"><i class="fa fa-location-dot"></i> <span id="pp-urzad-adres">Wydział Geodezji i Kartografii</span></div>
+                            <a href="#" id="pp-urzad-link" target="_blank" class="pp-cta secondary" style="font-size:11px; padding:6px 10px; margin-top:5px;"><i class="fa fa-map-location-dot"></i> Sprawdź kontakt i dojazd</a>
                         </div>
 
                         <div style="color:#fff; font-weight:600; margin-top:15px; margin-bottom:5px;">Księgi Wieczyste:</div>
                         <div class="pp-box">
                             <i class="fa fa-scale-balanced" style="color:var(--text-muted)"></i> <span id="pp-sad-nazwa" style="color:#fff">---</span><br>
-                            <div style="font-size:11px; margin-top:4px;"><i class="fa fa-location-dot"></i> Wydział Ksiąg Wieczystych</div>
+                            <div style="font-size:11px; margin-top:4px; margin-bottom:10px;"><i class="fa fa-location-dot"></i> Wydział Ksiąg Wieczystych</div>
+                            <a href="#" id="pp-sad-link" target="_blank" class="pp-cta secondary" style="font-size:11px; padding:6px 10px; margin-top:5px;"><i class="fa fa-map-location-dot"></i> Sprawdź kontakt i dojazd</a>
                             
                             <div class="pp-highlight-box">
                                 Twój kod wydziału:
@@ -1901,13 +1903,21 @@
             // Capitalize first letter
             cleanPowiat = cleanPowiat.charAt(0).toUpperCase() + cleanPowiat.slice(1);
             
+            let urzadMapQ = '';
             if (isCity) {
                 document.getElementById('pp-urzad-nazwa').textContent = `Urząd Miasta ${cleanPowiat}`;
+                urzadMapQ = `Urząd Miasta ${cleanPowiat}`;
             } else {
                 document.getElementById('pp-urzad-nazwa').textContent = `Starostwo Powiatowe w ${cleanPowiat}`;
+                urzadMapQ = `Starostwo Powiatowe w ${cleanPowiat}`;
             }
 
+            const sadMapQ = `Sąd Rejonowy Wydział Ksiąg Wieczystych w ${cleanPowiat}`;
             document.getElementById('pp-sad-nazwa').textContent = `Sąd Rejonowy w ${cleanPowiat}`;
+
+            // Podepnij wygenerowane linki Google Maps
+            document.getElementById('pp-urzad-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(urzadMapQ)}`;
+            document.getElementById('pp-sad-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(sadMapQ)}`;
 
             // Helper z generowaniem Kodu Wydziału Sądowego z teryt
             const prefixLookup = {
